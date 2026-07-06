@@ -37,6 +37,7 @@ const mapVehicle = (r: Record<string, any>): Vehicle => ({ id: r.id, code: r.kod
 const mapLog = (r: Record<string, any>): VehicleLog => ({ id: r.id, date: r.tanggal, vehicleId: r.vehicle_id, driverId: r.driver_id, startTime: String(r.jam_awal).slice(0, 5), endTime: r.jam_akhir ? String(r.jam_akhir).slice(0, 5) : undefined, startKm: Number(r.km_awal), endKm: r.km_akhir == null ? undefined : Number(r.km_akhir), distance: r.jarak_tempuh == null ? undefined : Number(r.jarak_tempuh), startPhoto: r.foto_km_awal, endPhoto: r.foto_km_akhir ?? undefined, startLocation: r.latitude_awal ? `${r.latitude_awal}, ${r.longitude_awal}` : undefined, endLocation: r.latitude_akhir ? `${r.latitude_akhir}, ${r.longitude_akhir}` : undefined, status: r.status, adminNote: r.catatan_admin ?? undefined });
 const locationParts = (value?: string) => { const [lat, lng] = (value ?? "").split(",").map((x) => Number(x.trim())); return { lat: Number.isFinite(lat) ? lat : null, lng: Number.isFinite(lng) ? lng : null }; };
 const normalizePhone = (value: string) => value.startsWith("0") ? `+62${value.slice(1)}` : value;
+const phoneLoginEmail = (value: string) => `${normalizePhone(value).replace(/\D/g, "")}@driver.jne.local`;
 const safeName = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
@@ -91,7 +92,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     users, vehicles, logs, currentUser, hydrated, isRemote,
     async login(identifier, password) {
       if (!supabase) { const user = users.find((u) => u.active && u.phone.toLowerCase() === identifier.trim().toLowerCase() && u.password === password) ?? null; setCurrentUser(user); return user; }
-      const credentials = identifier.includes("@") ? { email: identifier.trim(), password } : { phone: normalizePhone(identifier.trim()), password };
+      const credentials = { email: identifier.includes("@") ? identifier.trim() : phoneLoginEmail(identifier.trim()), password };
       const { data, error } = await supabase.auth.signInWithPassword(credentials); if (error || !data.user) return null; return loadRemote(data.user.id);
     },
     async logout() { if (supabase) await supabase.auth.signOut(); setCurrentUser(null); },

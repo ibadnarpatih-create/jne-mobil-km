@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const normalizePhone = (value: string) => value.startsWith("0") ? `+62${value.slice(1)}` : value;
+const phoneLoginEmail = (value: string) => `${normalizePhone(value).replace(/\D/g, "")}@driver.jne.local`;
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -14,7 +15,7 @@ Deno.serve(async (request) => {
     if (profile?.role !== "ADMIN" || !profile.status) throw new Error("Hanya admin aktif yang dapat menambah driver");
 
     const body = await request.json();
-    const { data, error } = await admin.auth.admin.createUser({ phone: normalizePhone(body.nomor_hp), password: body.password, phone_confirm: true, user_metadata: { nama: body.nama } });
+    const { data, error } = await admin.auth.admin.createUser({ email: phoneLoginEmail(body.nomor_hp), password: body.password, email_confirm: true, user_metadata: { nama: body.nama, nomor_hp: body.nomor_hp } });
     if (error || !data.user) throw error ?? new Error("Akun gagal dibuat");
     const { data: user, error: profileError } = await admin.from("users").insert({ id: data.user.id, nama: body.nama, nomor_hp: body.nomor_hp, role: "DRIVER", status: body.status ?? true, kendaraan_utama_id: body.kendaraan_utama_id, keterangan: body.keterangan }).select().single();
     if (profileError) { await admin.auth.admin.deleteUser(data.user.id); throw profileError; }
