@@ -7,11 +7,11 @@ Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
     const authHeader = request.headers.get("Authorization") ?? "";
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { global: { headers: { Authorization: authHeader } } });
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const token = authHeader.replace("Bearer ", ""); const { data: caller } = await admin.auth.getUser(token);
     if (!caller.user) throw new Error("Sesi admin tidak valid");
-    const { data: profile } = await admin.from("users").select("role").eq("id", caller.user.id).single();
-    if (profile?.role !== "ADMIN") throw new Error("Hanya admin yang dapat menambah driver");
+    const { data: profile } = await admin.from("users").select("role, status").eq("id", caller.user.id).single();
+    if (profile?.role !== "ADMIN" || !profile.status) throw new Error("Hanya admin aktif yang dapat menambah driver");
 
     const body = await request.json();
     const { data, error } = await admin.auth.admin.createUser({ phone: normalizePhone(body.nomor_hp), password: body.password, phone_confirm: true, user_metadata: { nama: body.nama } });
