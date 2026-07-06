@@ -1,5 +1,5 @@
-const CACHE = "jne-mobile-km-v1";
-const SHELL = ["/", "/manifest.webmanifest", "/jne-logo.jpg"];
+const CACHE = "jne-mobile-km-v2";
+const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png?v=3", "/icon-512.png?v=3"];
 self.addEventListener("install", (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL))));
 self.addEventListener("activate", (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))));
 self.addEventListener("fetch", (event) => {
