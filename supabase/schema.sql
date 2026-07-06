@@ -86,7 +86,7 @@ create policy "admin mengelola foto" on storage.objects for all to authenticated
 using (bucket_id = 'dashboard-photos' and public.is_admin()) with check (bucket_id = 'dashboard-photos' and public.is_admin());
 
 create or replace function public.finish_vehicle_log(p_log_id uuid, p_km_akhir bigint, p_foto text, p_lat numeric default null, p_lng numeric default null)
-returns public.vehicle_logs language plpgsql security invoker as $$
+returns public.vehicle_logs language plpgsql security definer set search_path = public as $$
 declare result public.vehicle_logs;
 begin
   update public.vehicle_logs set
@@ -103,3 +103,6 @@ begin
   update public.vehicles set km_terakhir = p_km_akhir, updated_at = now() where id = result.vehicle_id;
   return result;
 end $$;
+
+revoke all on function public.finish_vehicle_log(uuid, bigint, text, numeric, numeric) from public;
+grant execute on function public.finish_vehicle_log(uuid, bigint, text, numeric, numeric) to authenticated;
