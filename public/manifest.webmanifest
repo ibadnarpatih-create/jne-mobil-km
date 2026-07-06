@@ -1,0 +1,18 @@
+{
+  "name": "JNE Mobile KM",
+  "short_name": "JNE KM",
+  "description": "Pencatatan kilometer kendaraan operasional JNE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6fb",
+  "theme_color": "#172d72",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/jne-logo.jpg",
+      "sizes": "320x320",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

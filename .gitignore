@@ -1,0 +1,9 @@
+node_modules
+.next
+.pnpm-store
+.template-previews
+.codex-dev*.log
+.env*.local
+*.log
+.vercel
+supabase/.temp/
