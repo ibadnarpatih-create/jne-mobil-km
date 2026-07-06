@@ -21,6 +21,8 @@ Deno.serve(async (request) => {
     if (profileError) { await admin.auth.admin.deleteUser(data.user.id); throw profileError; }
     return new Response(JSON.stringify(user), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Permintaan gagal" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+    const message = error instanceof Error ? error.message : "Permintaan gagal";
+    console.error("create-driver gagal:", message);
+    return new Response(JSON.stringify({ error: message }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
   }
 });

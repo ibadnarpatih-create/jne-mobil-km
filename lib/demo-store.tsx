@@ -117,7 +117,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       if (!supabase) { setUsers((items) => items.some((u) => u.id === user.id) ? items.map((u) => u.id === user.id ? user : u) : [...items, user]); return; }
       const existing = users.some((u) => u.id === user.id); const payload = { id: user.id, nama: user.name, nomor_hp: user.phone, role: user.role, status: user.active, kendaraan_utama_id: user.vehicleId ?? null, keterangan: user.note ?? null };
       if (existing) { const { error } = await supabase.from("users").update(payload).eq("id", user.id); if (error) throw error; setUsers((items) => items.map((item) => item.id === user.id ? user : item)); }
-      else { const result = await supabase.functions.invoke("create-driver", { body: { ...payload, password: user.password } }); if (result.error) throw result.error; const created = mapUser(result.data); setUsers((items) => [...items, created]); }
+      else { const result = await supabase.functions.invoke("create-driver", { body: { ...payload, password: user.password } }); if (result.error) { let message = result.error.message; const response = (result.error as { context?: Response }).context; if (response) { try { const body = await response.clone().json(); message = body.error ?? message; } catch {} } throw new Error(message); } const created = mapUser(result.data); setUsers((items) => [...items, created]); }
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [users, vehicles, logs, currentUser, hydrated, isRemote, supabase]);
