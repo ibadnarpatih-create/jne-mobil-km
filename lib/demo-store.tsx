@@ -29,6 +29,7 @@ type Store = {
   endTrip: (logId: string, km: number, photo: string, location?: string) => Promise<VehicleLog>;
   updateLog: (id: string, patch: Partial<VehicleLog>) => Promise<void>; lockLog: (id: string) => Promise<void>;
   saveVehicle: (vehicle: Vehicle) => Promise<void>; saveUser: (user: User) => Promise<void>;
+  resetUserPassword: (userId: string, password: string) => Promise<void>; deleteUser: (userId: string) => Promise<void>;
 };
 const StoreContext = createContext<Store | null>(null);
 
@@ -118,6 +119,17 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       const existing = users.some((u) => u.id === user.id); const payload = { id: user.id, nama: user.name, nomor_hp: user.phone, role: user.role, status: user.active, kendaraan_utama_id: user.vehicleId ?? null, keterangan: user.note ?? null };
       if (existing) { const { error } = await supabase.from("users").update(payload).eq("id", user.id); if (error) throw error; setUsers((items) => items.map((item) => item.id === user.id ? user : item)); }
       else { const result = await supabase.functions.invoke("create-driver", { body: { ...payload, password: user.password } }); if (result.error) { let message = result.error.message; const response = (result.error as { context?: Response }).context; if (response) { try { const body = await response.clone().json(); message = body.error ?? message; } catch {} } throw new Error(message); } const created = mapUser(result.data); setUsers((items) => [...items, created]); }
+    },
+    async resetUserPassword(userId, password) {
+      if (!supabase) { setUsers((items) => items.map((item) => item.id === userId ? { ...item, password } : item)); return; }
+      const result = await supabase.functions.invoke("create-driver", { body: { action: "reset-password", user_id: userId, password } });
+      if (result.error) { let message = result.error.message; const response = (result.error as { context?: Response }).context; if (response) { try { const body = await response.clone().json(); message = body.error ?? message; } catch {} } throw new Error(message); }
+    },
+    async deleteUser(userId) {
+      if (!supabase) { if (logs.some((log) => log.driverId === userId)) throw new Error("Driver memiliki riwayat perjalanan. Nonaktifkan akun agar laporan tetap utuh."); setUsers((items) => items.filter((item) => item.id !== userId)); return; }
+      const result = await supabase.functions.invoke("create-driver", { body: { action: "delete-driver", user_id: userId } });
+      if (result.error) { let message = result.error.message; const response = (result.error as { context?: Response }).context; if (response) { try { const body = await response.clone().json(); message = body.error ?? message; } catch {} } throw new Error(message); }
+      setUsers((items) => items.filter((item) => item.id !== userId));
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [users, vehicles, logs, currentUser, hydrated, isRemote, supabase]);
