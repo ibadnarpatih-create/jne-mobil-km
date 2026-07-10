@@ -7,6 +7,7 @@ create type public.log_status as enum ('Belum Selesai', 'Selesai', 'Perlu Diperi
 create table public.users (
   id uuid primary key references auth.users(id) on delete cascade,
   nama text not null,
+  login_id text not null unique,
   nomor_hp text not null unique,
   role public.user_role not null default 'DRIVER',
   status boolean not null default true,
@@ -21,10 +22,17 @@ create table public.vehicles (
   kode_mobil text not null,
   plat_nomor text not null unique,
   jenis_kendaraan text not null,
+  unit_group text not null default 'INBOUND',
   km_terakhir bigint not null default 0 check (km_terakhir >= 0),
   status boolean not null default true,
   keterangan text,
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.app_settings (
+  key text primary key,
+  value jsonb not null,
   updated_at timestamptz not null default now()
 );
 
@@ -64,6 +72,7 @@ $$;
 alter table public.users enable row level security;
 alter table public.vehicles enable row level security;
 alter table public.vehicle_logs enable row level security;
+alter table public.app_settings enable row level security;
 
 create policy "user membaca profil sendiri" on public.users for select using (id = auth.uid() or public.is_admin());
 create policy "admin mengelola user" on public.users for all using (public.is_admin()) with check (public.is_admin());
@@ -73,6 +82,12 @@ create policy "driver membaca log sendiri" on public.vehicle_logs for select usi
 create policy "driver membuat log sendiri" on public.vehicle_logs for insert with check (driver_id = auth.uid());
 create policy "driver mengubah log belum dikunci" on public.vehicle_logs for update using (driver_id = auth.uid() and status <> 'Dikunci') with check (driver_id = auth.uid() and status <> 'Dikunci');
 create policy "admin mengelola semua log" on public.vehicle_logs for all using (public.is_admin()) with check (public.is_admin());
+create policy "pengguna membaca pengaturan aplikasi" on public.app_settings for select to authenticated using (true);
+create policy "admin mengelola pengaturan aplikasi" on public.app_settings for all using (public.is_admin()) with check (public.is_admin());
+
+insert into public.app_settings (key, value)
+values ('asset_unit_labels', '["INBOUND","OUTBOUND"]'::jsonb)
+on conflict (key) do nothing;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('dashboard-photos', 'dashboard-photos', false, 2097152, array['image/jpeg','image/png','image/webp'])

@@ -1,43 +1,157 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
-const normalizePhone = (value: string) => value.startsWith("0") ? `+62${value.slice(1)}` : value;
-const phoneLoginEmail = (value: string) => `${normalizePhone(value).replace(/\D/g, "")}@driver.jne.local`;
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+const normalizePhone = (value: string) =>
+  value.startsWith("0") ? `+62${value.slice(1)}` : value;
+const phoneLoginEmail = (value: string) =>
+  `${normalizePhone(value).replace(/\D/g, "")}@driver.jne.local`;
+const normalizeLoginId = (value: string) =>
+  value
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9._-]/g, "");
+const loginIdEmail = (value: string) =>
+  `${normalizeLoginId(value).toLowerCase()}@user.movetra.local`;
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (request.method === "OPTIONS")
+    return new Response("ok", { headers: cors });
   try {
     const authHeader = request.headers.get("Authorization") ?? "";
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const token = authHeader.replace("Bearer ", ""); const { data: caller } = await admin.auth.getUser(token);
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const token = authHeader.replace("Bearer ", "");
+    const { data: caller } = await admin.auth.getUser(token);
     if (!caller.user) throw new Error("Sesi admin tidak valid");
-    const { data: profile } = await admin.from("users").select("role, status").eq("id", caller.user.id).single();
-    if (profile?.role !== "ADMIN" || !profile.status) throw new Error("Hanya admin aktif yang dapat menambah driver");
+    const { data: profile } = await admin
+      .from("users")
+      .select("role, status")
+      .eq("id", caller.user.id)
+      .single();
+    if (profile?.role !== "ADMIN" || !profile.status)
+      throw new Error("Hanya admin aktif yang dapat menambah driver");
 
     const body = await request.json();
+    if (body.action === "update-driver") {
+      const loginId = normalizeLoginId(body.login_id ?? body.nomor_hp ?? "");
+      if (!loginId) throw new Error("ID Login wajib diisi");
+      const { data: target } = await admin
+        .from("users")
+        .select("id, role")
+        .eq("id", body.id)
+        .single();
+      if (!target || target.role !== "DRIVER")
+        throw new Error("Driver tidak ditemukan");
+      const { error: authError } = await admin.auth.admin.updateUserById(
+        target.id,
+        {
+          email: loginIdEmail(loginId),
+          email_confirm: true,
+          user_metadata: {
+            nama: body.nama,
+            login_id: loginId,
+            nomor_hp: body.nomor_hp,
+          },
+        },
+      );
+      if (authError) throw authError;
+      const { data: user, error: profileError } = await admin
+        .from("users")
+        .update({
+          nama: body.nama,
+          login_id: loginId,
+          nomor_hp: body.nomor_hp,
+          status: body.status ?? true,
+          kendaraan_utama_id: body.kendaraan_utama_id,
+          keterangan: body.keterangan,
+        })
+        .eq("id", target.id)
+        .select()
+        .single();
+      if (profileError) throw profileError;
+      return new Response(JSON.stringify(user), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
     if (body.action === "reset-password" || body.action === "delete-driver") {
-      const { data: target } = await admin.from("users").select("id, role").eq("id", body.user_id).single();
-      if (!target || target.role !== "DRIVER") throw new Error("Driver tidak ditemukan");
+      const { data: target } = await admin
+        .from("users")
+        .select("id, role")
+        .eq("id", body.user_id)
+        .single();
+      if (!target || target.role !== "DRIVER")
+        throw new Error("Driver tidak ditemukan");
       if (body.action === "reset-password") {
-        if (!body.password || body.password.length < 6) throw new Error("Password baru minimal 6 karakter");
-        const { error } = await admin.auth.admin.updateUserById(target.id, { password: body.password });
+        if (!body.password || body.password.length < 6)
+          throw new Error("Password baru minimal 6 karakter");
+        const { error } = await admin.auth.admin.updateUserById(target.id, {
+          password: body.password,
+        });
         if (error) throw error;
-        return new Response(JSON.stringify({ success: true }), { headers: { ...cors, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
       }
-      const { count } = await admin.from("vehicle_logs").select("id", { count: "exact", head: true }).eq("driver_id", target.id);
-      if ((count ?? 0) > 0) throw new Error("Driver memiliki riwayat perjalanan. Nonaktifkan akun agar laporan tetap utuh.");
+      const { count } = await admin
+        .from("vehicle_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("driver_id", target.id);
+      if ((count ?? 0) > 0)
+        throw new Error(
+          "Driver memiliki riwayat perjalanan. Nonaktifkan akun agar laporan tetap utuh.",
+        );
       const { error } = await admin.auth.admin.deleteUser(target.id);
       if (error) throw error;
-      return new Response(JSON.stringify({ success: true }), { headers: { ...cors, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
     }
-    const { data, error } = await admin.auth.admin.createUser({ email: phoneLoginEmail(body.nomor_hp), password: body.password, email_confirm: true, user_metadata: { nama: body.nama, nomor_hp: body.nomor_hp } });
+    const loginId = normalizeLoginId(body.login_id ?? body.nomor_hp ?? "");
+    if (!loginId) throw new Error("ID Login wajib diisi");
+    const { data, error } = await admin.auth.admin.createUser({
+      email: loginIdEmail(loginId),
+      password: body.password,
+      email_confirm: true,
+      user_metadata: {
+        nama: body.nama,
+        login_id: loginId,
+        nomor_hp: body.nomor_hp,
+      },
+    });
     if (error || !data.user) throw error ?? new Error("Akun gagal dibuat");
-    const { data: user, error: profileError } = await admin.from("users").insert({ id: data.user.id, nama: body.nama, nomor_hp: body.nomor_hp, role: "DRIVER", status: body.status ?? true, kendaraan_utama_id: body.kendaraan_utama_id, keterangan: body.keterangan }).select().single();
-    if (profileError) { await admin.auth.admin.deleteUser(data.user.id); throw profileError; }
-    return new Response(JSON.stringify(user), { headers: { ...cors, "Content-Type": "application/json" } });
+    const { data: user, error: profileError } = await admin
+      .from("users")
+      .insert({
+        id: data.user.id,
+        nama: body.nama,
+        login_id: loginId,
+        nomor_hp: body.nomor_hp,
+        role: "DRIVER",
+        status: body.status ?? true,
+        kendaraan_utama_id: body.kendaraan_utama_id,
+        keterangan: body.keterangan,
+      })
+      .select()
+      .single();
+    if (profileError) {
+      await admin.auth.admin.deleteUser(data.user.id);
+      throw profileError;
+    }
+    return new Response(JSON.stringify(user), {
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Permintaan gagal";
     console.error("create-driver gagal:", message);
-    return new Response(JSON.stringify({ error: message }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: message }), {
+      status: 400,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
   }
 });
