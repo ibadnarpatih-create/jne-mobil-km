@@ -84,8 +84,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const uploadPhoto = async (photo: string, suffix: "KM-AWAL" | "KM-AKHIR", vehicleId: string) => {
     if (!supabase || !currentUser) return { path: photo, url: photo };
     const vehicle = vehicles.find((v) => v.id === vehicleId); const now = jakartaNow();
-    const path = `${currentUser.id}/${now.date}_${safeName(vehicle?.plate ?? "KENDARAAN")}_${safeName(currentUser.name)}_${suffix}.jpg`;
-    const blob = await (await fetch(photo)).blob(); const { error } = await supabase.storage.from("dashboard-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+    const unique = `${Date.now()}-${createUuid().slice(0, 8)}`;
+    const path = `${currentUser.id}/${now.date}_${safeName(vehicle?.plate ?? "KENDARAAN")}_${safeName(currentUser.name)}_${suffix}_${unique}.jpg`;
+    const blob = await (await fetch(photo)).blob(); const { error } = await supabase.storage.from("dashboard-photos").upload(path, blob, { contentType: "image/jpeg", upsert: false });
     if (error) throw error; return { path, url: (await signedPhoto(path)) ?? path };
   };
 

@@ -4,8 +4,8 @@ import { DemoStoreProvider } from "@/lib/demo-store";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 
 export const metadata: Metadata = {
-  title: "JNE Mobile KM",
-  description: "Pencatatan kilometer kendaraan operasional JNE",
+  title: "Movetra",
+  description: "Move Smarter, Work Better",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

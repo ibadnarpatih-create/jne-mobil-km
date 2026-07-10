@@ -41,7 +41,7 @@ async function buildTemplate({ fileName, title, headers, examples, widths, instr
   helpSheet.getRange("A1:F1").values = [[title]];
   helpSheet.getRange("A1:F1").format = { fill: "#172D72", font: { bold: true, color: "#FFFFFF", size: 16 }, rowHeight: 36, verticalAlignment: "center" };
   helpSheet.mergeCells("A2:F2");
-  helpSheet.getRange("A2:F2").values = [["JNE Mobile KM · Template Import Massal"]];
+  helpSheet.getRange("A2:F2").values = [["Movetra · Template Import Massal"]];
   helpSheet.getRange("A2:F2").format = { fill: "#E31E24", font: { bold: true, color: "#FFFFFF" }, rowHeight: 26, verticalAlignment: "center" };
   const instructionRows = instructions.map((text, index) => [`${index + 1}.`, text, null, null, null, null]);
   helpSheet.getRange(`A4:F${instructionRows.length + 3}`).values = instructionRows;

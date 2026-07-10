@@ -1,7 +1,7 @@
 {
-  "name": "JNE Mobile KM",
-  "short_name": "JNE KM",
-  "description": "Pencatatan kilometer kendaraan operasional JNE",
+  "name": "Movetra",
+  "short_name": "Movetra",
+  "description": "Move Smarter, Work Better",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f4f6fb",
