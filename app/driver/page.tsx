@@ -309,7 +309,7 @@ function HomeScreen({
               </span>
               <div>
                 <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600">
-                  Tugas Hari Ini Selesai
+                  Trip Terakhir Selesai
                 </p>
                 <h2 className="mt-1 text-lg font-extrabold text-emerald-950">
                   Perjalanan berhasil dicatat
@@ -320,11 +320,19 @@ function HomeScreen({
                 </p>
               </div>
             </div>
+            <Button
+              size="lg"
+              className="mt-5 w-full shadow-lg shadow-blue-200"
+              onClick={onStart}
+            >
+              <Gauge className="h-5 w-5" /> MULAI TRIP BERIKUTNYA
+              <ArrowRight className="ml-auto h-5 w-5" />
+            </Button>
             <button
               onClick={onHistory}
-              className="mt-5 flex w-full items-center justify-between rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-800"
+              className="mt-3 flex w-full items-center justify-between rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-800"
             >
-              Lihat ringkasan perjalanan <ArrowRight className="h-4 w-4" />
+              Lihat riwayat perjalanan <ArrowRight className="h-4 w-4" />
             </button>
           </CardContent>
         </Card>
