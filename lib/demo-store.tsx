@@ -163,6 +163,8 @@ const mapVehicle = (r: Record<string, any>): Vehicle => ({
   type: r.jenis_kendaraan,
   unitGroup: r.unit_group ?? "INBOUND",
   lastKm: Number(r.km_terakhir),
+  fuelTankCapacity:
+    r.fuel_tank_capacity == null ? undefined : Number(r.fuel_tank_capacity),
   active: r.status,
   note: r.keterangan ?? undefined,
 });
@@ -497,6 +499,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
               jenis_kendaraan: vehicle.type,
               unit_group: vehicle.unitGroup,
               km_terakhir: vehicle.lastKm,
+              fuel_tank_capacity: vehicle.fuelTankCapacity ?? null,
               status: vehicle.active,
               keterangan: vehicle.note,
             });

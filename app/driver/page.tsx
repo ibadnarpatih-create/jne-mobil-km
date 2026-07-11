@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   Clock3,
   Gauge,
+  Fuel,
   History,
   Home,
   ImageIcon,
@@ -29,37 +30,10 @@ import { Input, Label, Select } from "@/components/ui/field";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatDate, formatKm, jakartaNow } from "@/lib/utils";
 import type { VehicleLog } from "@/lib/types";
+import { compressImage } from "@/lib/image";
+import { FuelInputScreen, FuelSubmitSuccess } from "@/components/fuel/fuel-input-screen";
 
-type Screen = "home" | "history" | "start" | "end" | "success";
-
-async function compressImage(file: File): Promise<string> {
-  const src = URL.createObjectURL(file);
-  try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = src;
-    });
-    const max = 1600;
-    const scale = Math.min(1, max / Math.max(image.width, image.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = image.width * scale;
-    canvas.height = image.height * scale;
-    canvas
-      .getContext("2d")
-      ?.drawImage(image, 0, 0, canvas.width, canvas.height);
-    let quality = 0.82;
-    let result = canvas.toDataURL("image/jpeg", quality);
-    while (result.length > 2_600_000 && quality > 0.42) {
-      quality -= 0.1;
-      result = canvas.toDataURL("image/jpeg", quality);
-    }
-    return result;
-  } finally {
-    URL.revokeObjectURL(src);
-  }
-}
+type Screen = "home" | "history" | "start" | "end" | "success" | "fuel" | "fuel-success";
 
 export default function DriverPage() {
   const router = useRouter();
@@ -151,6 +125,16 @@ export default function DriverPage() {
           onDone={goHome}
         />
       )}
+      {screen === "fuel" && (
+        <FuelInputScreen
+          user={currentUser}
+          vehicles={vehicles}
+          logs={myLogs}
+          onBack={goHome}
+          onSuccess={() => setScreen("fuel-success")}
+        />
+      )}
+      {screen === "fuel-success" && <FuelSubmitSuccess onDone={goHome} />}
 
       {(screen === "home" || screen === "history") && (
         <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-2xl border-t border-slate-200 bg-white px-6 pt-2 shadow-[0_-8px_30px_rgba(15,23,42,.06)]">
@@ -160,6 +144,13 @@ export default function DriverPage() {
           >
             <Home className="h-5 w-5" />
             Beranda
+          </button>
+          <button
+            onClick={() => setScreen("fuel")}
+            className="flex flex-1 flex-col items-center gap-1 py-2 text-xs font-bold text-slate-400"
+          >
+            <Fuel className="h-5 w-5" />
+            Input BBM
           </button>
           <button
             onClick={() => setScreen("history")}
