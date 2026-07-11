@@ -48,9 +48,6 @@ button {
     filter: none !important;
   }
 
-  .admin-mobile-safe section {
-    contain: layout style;
-  }
 }
 
 @media print {

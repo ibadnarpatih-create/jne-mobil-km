@@ -261,39 +261,64 @@ function Dashboard({
       view: "logs" as View,
     },
   ];
+  const displayDate = new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(new Date());
   return (
     <div className="space-y-4 sm:space-y-6">
-      <section className="relative rounded-[1.5rem] bg-[#193475] p-5 text-white sm:isolate sm:overflow-hidden sm:rounded-[1.75rem] sm:bg-gradient-to-br sm:from-[#12265f] sm:via-jne-blue sm:to-[#24449a] sm:p-8 sm:shadow-[0_22px_50px_rgba(23,45,114,.24)]">
-        <div className="absolute -right-16 -top-20 hidden h-64 w-64 rounded-full border-[45px] border-white/5 sm:block" />
-        <div className="absolute -bottom-24 right-1/3 hidden h-48 w-48 rounded-full bg-jne-red/20 blur-3xl sm:block" />
-        <div className="relative flex flex-col justify-between gap-5 sm:gap-7 lg:flex-row lg:items-center">
+      <div className="rounded-3xl bg-[#193475] p-5 text-white sm:hidden">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-300/30 px-3 py-1.5 text-[11px] font-bold text-blue-100">
+          <Sparkles className="h-3.5 w-3.5" /> Pusat Kendali Operasional
+        </div>
+        <h2 className="text-[1.65rem] font-extrabold leading-tight">
+          Selamat datang, Admin Operasional
+        </h2>
+        <p className="mt-2 flex items-center gap-2 text-sm text-blue-100">
+          <CalendarDays className="h-4 w-4" /> {displayDate}
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <Button
+            className="h-auto min-h-11 whitespace-normal bg-white px-2 text-xs leading-tight text-jne-blue"
+            onClick={() => onCreate("vehicle")}
+          >
+            <Plus className="h-4 w-4" /> Tambah Kendaraan
+          </Button>
+          <Button
+            className="h-auto min-h-11 whitespace-normal border border-blue-300/40 bg-[#284789] px-2 text-xs leading-tight text-white shadow-none"
+            onClick={() => onCreate("driver")}
+          >
+            <Plus className="h-4 w-4" /> Tambah Driver
+          </Button>
+        </div>
+      </div>
+      <section className="relative hidden isolate overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#12265f] via-jne-blue to-[#24449a] p-8 text-white shadow-[0_22px_50px_rgba(23,45,114,.24)] sm:block">
+        <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[45px] border-white/5" />
+        <div className="absolute -bottom-24 right-1/3 h-48 w-48 rounded-full bg-jne-red/20 blur-3xl" />
+        <div className="relative flex flex-col justify-between gap-7 lg:flex-row lg:items-center">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-blue-100 sm:mb-4 sm:text-xs">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-blue-100">
               <Sparkles className="h-3.5 w-3.5" /> Pusat Kendali Operasional
             </div>
-            <h2 className="max-w-xl text-[1.65rem] font-extrabold leading-tight sm:text-3xl">
+            <h2 className="max-w-xl text-3xl font-extrabold leading-tight">
               Selamat datang, Admin Operasional
             </h2>
             <p className="mt-2 flex items-center gap-2 text-sm text-blue-100">
-              <CalendarDays className="h-4 w-4" />{" "}
-              {new Intl.DateTimeFormat("id-ID", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-                timeZone: "Asia/Jakarta",
-              }).format(new Date())}
+              <CalendarDays className="h-4 w-4" /> {displayDate}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button
-              className="h-auto min-h-11 whitespace-normal border border-white/20 bg-white px-2 text-xs leading-tight text-jne-blue hover:bg-blue-50 sm:px-4 sm:text-sm"
+              className="border border-white/20 bg-white text-jne-blue hover:bg-blue-50"
               onClick={() => onCreate("vehicle")}
             >
               <Plus className="h-4 w-4" /> Tambah Kendaraan
             </Button>
             <Button
-              className="h-auto min-h-11 whitespace-normal border border-white/20 bg-white/10 px-2 text-xs leading-tight text-white shadow-none hover:bg-white/20 sm:px-4 sm:text-sm"
+              className="border border-white/20 bg-white/10 text-white shadow-none hover:bg-white/20"
               onClick={() => onCreate("driver")}
             >
               <Plus className="h-4 w-4" /> Tambah Driver
