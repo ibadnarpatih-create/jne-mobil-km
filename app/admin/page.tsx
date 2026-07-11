@@ -152,7 +152,7 @@ export default function AdminPage() {
           </Button>
         </div>
       </aside>
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-7">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:bg-white/95 sm:px-7 sm:backdrop-blur">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMenu(true)}
@@ -263,9 +263,9 @@ function Dashboard({
   ];
   return (
     <div className="space-y-4 sm:space-y-6">
-      <section className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#12265f] via-jne-blue to-[#24449a] p-5 text-white shadow-[0_22px_50px_rgba(23,45,114,.24)] sm:rounded-[1.75rem] sm:p-8">
+      <section className="relative isolate overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#12265f] via-jne-blue to-[#24449a] p-5 text-white shadow-lg sm:rounded-[1.75rem] sm:p-8 sm:shadow-[0_22px_50px_rgba(23,45,114,.24)]">
         <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[45px] border-white/5" />
-        <div className="absolute -bottom-24 right-1/3 h-48 w-48 rounded-full bg-jne-red/20 blur-3xl" />
+        <div className="absolute -bottom-24 right-1/3 hidden h-48 w-48 rounded-full bg-jne-red/20 blur-3xl sm:block" />
         <div className="relative flex flex-col justify-between gap-5 sm:gap-7 lg:flex-row lg:items-center">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-blue-100 sm:mb-4 sm:text-xs">
@@ -306,7 +306,7 @@ function Dashboard({
           <button
             key={c.label}
             onClick={() => onNavigate(c.view)}
-            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5"
+            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition-shadow hover:shadow-md sm:p-5 sm:hover:-translate-y-0.5 sm:hover:shadow-lg"
           >
             <div className="flex items-start justify-between">
               <span
