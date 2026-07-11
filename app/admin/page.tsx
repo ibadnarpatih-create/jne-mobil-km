@@ -107,7 +107,7 @@ export default function AdminPage() {
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform lg:translate-x-0 ${menu ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white lg:visible lg:translate-x-0 ${menu ? "visible translate-x-0" : "invisible -translate-x-full"}`}
       >
         <div className="border-b border-slate-100 p-5">
           <Brand />
@@ -152,7 +152,7 @@ export default function AdminPage() {
           </Button>
         </div>
       </aside>
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:bg-white/95 sm:px-7 sm:backdrop-blur">
+      <header className="relative z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:sticky sm:top-0 sm:bg-white/95 sm:px-7 sm:backdrop-blur">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMenu(true)}
@@ -263,8 +263,8 @@ function Dashboard({
   ];
   return (
     <div className="space-y-4 sm:space-y-6">
-      <section className="relative isolate overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#12265f] via-jne-blue to-[#24449a] p-5 text-white shadow-lg sm:rounded-[1.75rem] sm:p-8 sm:shadow-[0_22px_50px_rgba(23,45,114,.24)]">
-        <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[45px] border-white/5" />
+      <section className="relative overflow-hidden rounded-[1.5rem] bg-[#193475] p-5 text-white sm:isolate sm:rounded-[1.75rem] sm:bg-gradient-to-br sm:from-[#12265f] sm:via-jne-blue sm:to-[#24449a] sm:p-8 sm:shadow-[0_22px_50px_rgba(23,45,114,.24)]">
+        <div className="absolute -right-16 -top-20 hidden h-64 w-64 rounded-full border-[45px] border-white/5 sm:block" />
         <div className="absolute -bottom-24 right-1/3 hidden h-48 w-48 rounded-full bg-jne-red/20 blur-3xl sm:block" />
         <div className="relative flex flex-col justify-between gap-5 sm:gap-7 lg:flex-row lg:items-center">
           <div>
@@ -306,11 +306,11 @@ function Dashboard({
           <button
             key={c.label}
             onClick={() => onNavigate(c.view)}
-            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition-shadow hover:shadow-md sm:p-5 sm:hover:-translate-y-0.5 sm:hover:shadow-lg"
+            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-3 text-left sm:p-5 sm:shadow-sm sm:transition sm:hover:-translate-y-0.5 sm:hover:shadow-lg"
           >
             <div className="flex items-start justify-between">
               <span
-                className={`rounded-xl bg-gradient-to-br p-2.5 text-white shadow-lg sm:rounded-2xl sm:p-3 ${c.tone}`}
+                className={`rounded-xl bg-gradient-to-br p-2.5 text-white sm:rounded-2xl sm:p-3 sm:shadow-lg ${c.tone}`}
               >
                 <c.icon className="h-5 w-5 sm:h-6 sm:w-6" />
               </span>
