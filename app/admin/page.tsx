@@ -173,7 +173,7 @@ export default function AdminPage() {
           <span className="h-2 w-2 rounded-full bg-emerald-500" /> Sistem aktif
         </div>
       </header>
-      <div className="p-4 sm:p-7">
+      <div className="p-3 sm:p-7">
         {view === "dashboard" && (
           <Dashboard
             onNavigate={setView}
@@ -262,16 +262,16 @@ function Dashboard({
     },
   ];
   return (
-    <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#12265f] via-jne-blue to-[#24449a] p-6 text-white shadow-[0_22px_50px_rgba(23,45,114,.24)] sm:p-8">
+    <div className="space-y-4 sm:space-y-6">
+      <section className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#12265f] via-jne-blue to-[#24449a] p-5 text-white shadow-[0_22px_50px_rgba(23,45,114,.24)] sm:rounded-[1.75rem] sm:p-8">
         <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[45px] border-white/5" />
         <div className="absolute -bottom-24 right-1/3 h-48 w-48 rounded-full bg-jne-red/20 blur-3xl" />
-        <div className="relative flex flex-col justify-between gap-7 lg:flex-row lg:items-center">
+        <div className="relative flex flex-col justify-between gap-5 sm:gap-7 lg:flex-row lg:items-center">
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-blue-100">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-blue-100 sm:mb-4 sm:text-xs">
               <Sparkles className="h-3.5 w-3.5" /> Pusat Kendali Operasional
             </div>
-            <h2 className="max-w-xl text-2xl font-extrabold leading-tight sm:text-3xl">
+            <h2 className="max-w-xl text-[1.65rem] font-extrabold leading-tight sm:text-3xl">
               Selamat datang, Admin Operasional
             </h2>
             <p className="mt-2 flex items-center gap-2 text-sm text-blue-100">
@@ -285,15 +285,15 @@ function Dashboard({
               }).format(new Date())}
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
             <Button
-              className="border border-white/20 bg-white text-jne-blue hover:bg-blue-50"
+              className="h-auto min-h-11 whitespace-normal border border-white/20 bg-white px-2 text-xs leading-tight text-jne-blue hover:bg-blue-50 sm:px-4 sm:text-sm"
               onClick={() => onCreate("vehicle")}
             >
               <Plus className="h-4 w-4" /> Tambah Kendaraan
             </Button>
             <Button
-              className="border border-white/20 bg-white/10 text-white shadow-none hover:bg-white/20"
+              className="h-auto min-h-11 whitespace-normal border border-white/20 bg-white/10 px-2 text-xs leading-tight text-white shadow-none hover:bg-white/20 sm:px-4 sm:text-sm"
               onClick={() => onCreate("driver")}
             >
               <Plus className="h-4 w-4" /> Tambah Driver
@@ -301,28 +301,28 @@ function Dashboard({
           </div>
         </div>
       </section>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {cards.map((c) => (
           <button
             key={c.label}
             onClick={() => onNavigate(c.view)}
-            className="group rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5"
           >
             <div className="flex items-start justify-between">
               <span
-                className={`rounded-2xl bg-gradient-to-br p-3 text-white shadow-lg ${c.tone}`}
+                className={`rounded-xl bg-gradient-to-br p-2.5 text-white shadow-lg sm:rounded-2xl sm:p-3 ${c.tone}`}
               >
-                <c.icon className="h-6 w-6" />
+                <c.icon className="h-5 w-5 sm:h-6 sm:w-6" />
               </span>
-              <ArrowUpRight className="h-5 w-5 text-slate-300 transition group-hover:text-jne-blue" />
+              <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:text-jne-blue sm:h-5 sm:w-5" />
             </div>
-            <p className="mt-5 text-2xl font-extrabold text-slate-900">
+            <p className="mt-4 break-words text-xl font-extrabold text-slate-900 sm:mt-5 sm:text-2xl">
               {c.value}
             </p>
-            <p className="mt-1 text-sm font-semibold text-slate-700">
+            <p className="mt-1 text-xs font-semibold leading-tight text-slate-700 sm:text-sm">
               {c.label}
             </p>
-            <p className="mt-1 text-xs text-slate-400">{c.detail}</p>
+            <p className="mt-1 text-[11px] leading-tight text-slate-400 sm:text-xs">{c.detail}</p>
           </button>
         ))}
       </div>
