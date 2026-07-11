@@ -98,7 +98,7 @@ export default function AdminPage() {
     setMenu(false);
   };
   return (
-    <main className="min-h-dvh bg-jne-pale lg:pl-72">
+    <main className="admin-mobile-safe min-h-dvh bg-jne-pale lg:pl-72">
       {menu && (
         <button
           aria-label="Tutup menu"
@@ -263,7 +263,7 @@ function Dashboard({
   ];
   return (
     <div className="space-y-4 sm:space-y-6">
-      <section className="relative overflow-hidden rounded-[1.5rem] bg-[#193475] p-5 text-white sm:isolate sm:rounded-[1.75rem] sm:bg-gradient-to-br sm:from-[#12265f] sm:via-jne-blue sm:to-[#24449a] sm:p-8 sm:shadow-[0_22px_50px_rgba(23,45,114,.24)]">
+      <section className="relative rounded-[1.5rem] bg-[#193475] p-5 text-white sm:isolate sm:overflow-hidden sm:rounded-[1.75rem] sm:bg-gradient-to-br sm:from-[#12265f] sm:via-jne-blue sm:to-[#24449a] sm:p-8 sm:shadow-[0_22px_50px_rgba(23,45,114,.24)]">
         <div className="absolute -right-16 -top-20 hidden h-64 w-64 rounded-full border-[45px] border-white/5 sm:block" />
         <div className="absolute -bottom-24 right-1/3 hidden h-48 w-48 rounded-full bg-jne-red/20 blur-3xl sm:block" />
         <div className="relative flex flex-col justify-between gap-5 sm:gap-7 lg:flex-row lg:items-center">

@@ -39,6 +39,20 @@ button {
   display: none;
 }
 
+/* Hindari korupsi layer pada GPU Chrome Android kelas entry-level. */
+@media (max-width: 639px) {
+  .admin-mobile-safe,
+  .admin-mobile-safe * {
+    animation: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+  }
+
+  .admin-mobile-safe section {
+    contain: layout style;
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;
