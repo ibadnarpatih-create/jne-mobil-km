@@ -13,6 +13,7 @@ import {
   CircleAlert,
   Download,
   FileSpreadsheet,
+  Fuel,
   Gauge,
   KeyRound,
   LayoutDashboard,
@@ -45,14 +46,24 @@ import { useDemoStore } from "@/lib/demo-store";
 import { createUuid, formatDate, formatKm, jakartaNow } from "@/lib/utils";
 import type { LogStatus, User, Vehicle, VehicleLog } from "@/lib/types";
 import { BulkImportModal } from "@/components/bulk-import-modal";
+import { FuelMasterPanel } from "@/components/fuel/fuel-master-panel";
+import { FuelTransactionsPanel } from "@/components/fuel/fuel-transactions-panel";
 
 type View =
-  "dashboard" | "logs" | "vehicles" | "drivers" | "export" | "settings";
-const nav: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
+  "dashboard" | "logs" | "vehicles" | "drivers" | "export" | "settings"
+  | "fuel-types" | "fuel-prices" | "fuel-stations"
+  | "fuel-transactions" | "fuel-validation" | "fuel-report";
+const nav: { id: View; label: string; icon: typeof LayoutDashboard; group?: "BBM" }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "logs", label: "Data Harian Mobil", icon: BarChart3 },
   { id: "vehicles", label: "Data Kendaraan", icon: CarFront },
   { id: "drivers", label: "Data Driver", icon: Users },
+  { id: "fuel-transactions", label: "Transaksi BBM", icon: Fuel, group: "BBM" },
+  { id: "fuel-validation", label: "Validasi BBM", icon: ShieldCheck, group: "BBM" },
+  { id: "fuel-report", label: "Laporan BBM", icon: FileSpreadsheet, group: "BBM" },
+  { id: "fuel-types", label: "Jenis BBM", icon: Fuel, group: "BBM" },
+  { id: "fuel-prices", label: "Harga BBM", icon: FileSpreadsheet, group: "BBM" },
+  { id: "fuel-stations", label: "SPBU / Vendor", icon: Route, group: "BBM" },
   { id: "export", label: "Export Laporan", icon: Download },
   { id: "settings", label: "Pengaturan Akun", icon: Settings },
 ];
@@ -102,15 +113,19 @@ export default function AdminPage() {
           <Brand />
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {nav.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => choose(item.id)}
-              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${view === item.id ? "bg-jne-blue text-white" : "text-slate-600 hover:bg-slate-100"}`}
-            >
-              <item.icon className="h-5 w-5" />
-              {item.label}
-            </button>
+          {nav.map((item, index) => (
+            <div key={item.id}>
+              {item.group && nav[index - 1]?.group !== item.group && (
+                <p className="mb-2 mt-5 px-4 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{item.group}</p>
+              )}
+              <button
+                onClick={() => choose(item.id)}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${view === item.id ? "bg-jne-blue text-white" : "text-slate-600 hover:bg-slate-100"}`}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.label}
+              </button>
+            </div>
           ))}
         </nav>
         <div className="border-t border-slate-100 p-4">
@@ -183,6 +198,12 @@ export default function AdminPage() {
         )}
         {view === "export" && <ExportPanel />}
         {view === "settings" && <SettingsPanel />}
+        {view === "fuel-types" && <FuelMasterPanel section="types" />}
+        {view === "fuel-prices" && <FuelMasterPanel section="prices" />}
+        {view === "fuel-stations" && <FuelMasterPanel section="stations" />}
+        {view === "fuel-transactions" && <FuelTransactionsPanel mode="transactions" />}
+        {view === "fuel-validation" && <FuelTransactionsPanel mode="validation" />}
+        {view === "fuel-report" && <FuelTransactionsPanel mode="report" />}
       </div>
     </main>
   );

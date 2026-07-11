@@ -20,6 +20,7 @@ export interface Vehicle {
   type: string;
   unitGroup: string;
   lastKm: number;
+  fuelTankCapacity?: number;
   active: boolean;
   note?: string;
 }
