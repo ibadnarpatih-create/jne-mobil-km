@@ -467,14 +467,51 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         return updated;
       },
       async updateLog(id, patch) {
-        setLogs((items) =>
-          items.map((l) => (l.id === id ? { ...l, ...patch } : l)),
-        );
-        if (supabase)
-          await supabase
+        const old = logs.find((log) => log.id === id);
+        if (!old) throw new Error("Data perjalanan tidak ditemukan.");
+        if (old.status === "Dikunci")
+          throw new Error("Data yang sudah dikunci tidak dapat direvisi.");
+
+        const updated = { ...old, ...patch };
+        if (updated.endKm != null && updated.endKm < updated.startKm)
+          throw new Error("KM akhir tidak boleh lebih kecil dari KM awal.");
+        updated.distance =
+          updated.endKm == null ? undefined : updated.endKm - updated.startKm;
+
+        if (supabase) {
+          const { error } = await supabase
             .from("vehicle_logs")
-            .update({ status: patch.status, catatan_admin: patch.adminNote })
-            .eq("id", id);
+            .update({
+              km_awal: updated.startKm,
+              km_akhir: updated.endKm ?? null,
+              status: updated.status,
+              catatan_admin: updated.adminNote?.trim() || null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", id)
+            .neq("status", "Dikunci");
+          if (error) throw error;
+
+          // Ubah odometer master hanya jika nilainya masih berasal dari log ini.
+          if (old.endKm != null && updated.endKm != null && old.endKm !== updated.endKm) {
+            const { error: vehicleError } = await supabase
+              .from("vehicles")
+              .update({ km_terakhir: updated.endKm, updated_at: new Date().toISOString() })
+              .eq("id", old.vehicleId)
+              .eq("km_terakhir", old.endKm);
+            if (vehicleError) throw vehicleError;
+          }
+        }
+
+        setLogs((items) => items.map((log) => (log.id === id ? updated : log)));
+        if (old.endKm != null && updated.endKm != null && old.endKm !== updated.endKm)
+          setVehicles((items) =>
+            items.map((vehicle) =>
+              vehicle.id === old.vehicleId && vehicle.lastKm === old.endKm
+                ? { ...vehicle, lastKm: updated.endKm! }
+                : vehicle,
+            ),
+          );
       },
       async lockLog(id) {
         setLogs((items) =>

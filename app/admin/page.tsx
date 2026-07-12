@@ -486,6 +486,7 @@ function LogsPanel() {
     log: VehicleLog;
     type: "awal" | "akhir";
   } | null>(null);
+  const [editing, setEditing] = useState<VehicleLog | null>(null);
   const rows = useMemo(
     () =>
       store.logs.filter((log) => {
@@ -613,14 +614,17 @@ function LogsPanel() {
                       <Badge>{log.status}</Badge>
                     </td>
                     <td className="px-4 py-4">
-                      {log.status !== "Dikunci" && log.endKm != null ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => store.lockLog(log.id)}
-                        >
-                          <Lock className="h-3.5 w-3.5" /> Kunci
-                        </Button>
+                      {log.status !== "Dikunci" ? (
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => setEditing(log)}>
+                            <Pencil className="h-3.5 w-3.5" /> Periksa / Revisi
+                          </Button>
+                          {log.endKm != null && (
+                            <Button size="sm" variant="outline" onClick={() => store.lockLog(log.id)}>
+                              <Lock className="h-3.5 w-3.5" /> Kunci
+                            </Button>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-xs text-slate-400">Terkunci</span>
                       )}
@@ -634,6 +638,69 @@ function LogsPanel() {
         </div>
       </Card>
       {photo && <PhotoModal data={photo} onClose={() => setPhoto(null)} />}
+      {editing && <LogReviewModal log={editing} onClose={() => setEditing(null)} />}
+    </div>
+  );
+}
+
+function LogReviewModal({ log, onClose }: { log: VehicleLog; onClose: () => void }) {
+  const store = useDemoStore();
+  const [startKm, setStartKm] = useState(String(log.startKm));
+  const [endKm, setEndKm] = useState(log.endKm == null ? "" : String(log.endKm));
+  const [status, setStatus] = useState<LogStatus>(log.status);
+  const [note, setNote] = useState(log.adminNote ?? "");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const start = Number(startKm);
+  const end = endKm === "" ? undefined : Number(endKm);
+  const distance = end == null || !Number.isFinite(start) ? undefined : end - start;
+
+  async function save(lockAfter = false) {
+    if (!Number.isInteger(start) || start < 0) return setError("KM awal wajib berupa angka bulat yang valid.");
+    if (end != null && (!Number.isInteger(end) || end < start)) return setError("KM akhir harus sama dengan atau lebih besar dari KM awal.");
+    if (lockAfter && end == null) return setError("KM akhir wajib diisi sebelum data dikunci.");
+    setBusy(true);
+    setError("");
+    try {
+      await store.updateLog(log.id, {
+        startKm: start,
+        endKm: end,
+        status,
+        adminNote: note,
+      });
+      if (lockAfter) await store.lockLog(log.id);
+      onClose();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Gagal menyimpan revisi.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-center overflow-y-auto bg-slate-950/50 p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div><h3 className="text-xl font-extrabold">Periksa / Revisi Data KM</h3><p className="mt-1 text-sm text-slate-500">Perubahan hanya dapat dilakukan sebelum data dikunci.</p></div>
+          <button onClick={onClose} className="rounded-lg p-2 hover:bg-slate-100"><X className="h-5 w-5" /></button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div><Label>KM Awal</Label><Input type="number" min="0" step="1" value={startKm} onChange={(e) => setStartKm(e.target.value)} /></div>
+            <div><Label>KM Akhir</Label><Input type="number" min={startKm || "0"} step="1" value={endKm} onChange={(e) => setEndKm(e.target.value)} placeholder="Belum selesai" /></div>
+          </div>
+          <div className={`rounded-xl p-3 text-sm font-bold ${distance != null && distance > 300 ? "bg-red-50 text-red-700" : "bg-blue-50 text-jne-blue"}`}>
+            Jarak hasil revisi: {distance == null ? "—" : `${formatKm(distance)} KM`}
+          </div>
+          <div><Label>Status verifikasi</Label><Select value={status} onChange={(e) => setStatus(e.target.value as LogStatus)}><option>Belum Selesai</option><option>Selesai</option><option>Perlu Diperiksa</option></Select></div>
+          <div><Label>Catatan admin</Label><Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Contoh: Koreksi kelebihan 1 digit setelah cek foto" /></div>
+          {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button disabled={busy} variant="outline" onClick={() => save(false)}><ShieldCheck className="h-4 w-4" /> Simpan Verifikasi</Button>
+            <Button disabled={busy || end == null} onClick={() => save(true)}><Lock className="h-4 w-4" /> Simpan & Kunci</Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
