@@ -13,8 +13,8 @@ import { compressImage } from "@/lib/image";
 import type { User, Vehicle, VehicleLog } from "@/lib/types";
 import { formatKm, jakartaNow } from "@/lib/utils";
 
-export function FuelInputScreen({ user, vehicles, logs, onBack, onSuccess }: {
-  user: User; vehicles: Vehicle[]; logs: VehicleLog[]; onBack: () => void; onSuccess: () => void;
+export function FuelInputScreen({ user, vehicles, logs, onBack, onSuccess, onDirtyChange }: {
+  user: User; vehicles: Vehicle[]; logs: VehicleLog[]; onBack: () => void; onSuccess: () => void; onDirtyChange: (dirty: boolean) => void;
 }) {
   const now = jakartaNow();
   const myTrips = useMemo(() => logs.filter((log) => log.driverId === user.id), [logs, user.id]);
@@ -59,6 +59,11 @@ export function FuelInputScreen({ user, vehicles, logs, onBack, onSuccess }: {
       () => undefined, { timeout: 5000 },
     );
   }, []);
+  useEffect(() => {
+    const dirty = Boolean(fuelTypeId || realPayment || odometer || stationId || manualStation || notes || kmBeforePhoto || kmAfterPhoto || dispenserPhoto || receiptPhoto);
+    onDirtyChange(dirty);
+    return () => onDirtyChange(false);
+  }, [dispenserPhoto, fuelTypeId, kmAfterPhoto, kmBeforePhoto, manualStation, notes, odometer, onDirtyChange, realPayment, receiptPhoto, stationId]);
   const refreshCoordinates = () => {
     if (navigator.geolocation) navigator.geolocation.getCurrentPosition(
       (position) => setCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
