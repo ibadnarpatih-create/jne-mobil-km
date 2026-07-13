@@ -158,7 +158,7 @@ export default function AdminPage() {
         </nav>
         <div className="border-t border-slate-100 p-4">
           <div className="mb-3 flex items-center gap-3 px-2">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-blue-50 font-bold text-jne-blue">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-teal-50 font-bold text-jne-blue">
               AO
             </span>
             <div className="min-w-0">
@@ -261,7 +261,7 @@ function Dashboard({
       value: vehicles.filter((v) => v.active).length,
       detail: `${vehicles.length} total armada`,
       icon: Truck,
-      tone: "from-blue-500 to-blue-700",
+      tone: "from-teal-500 to-teal-700",
       view: "vehicles" as View,
     },
     {
@@ -298,14 +298,14 @@ function Dashboard({
   }).format(new Date());
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="rounded-3xl bg-[#193475] p-5 text-white sm:hidden">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-300/30 px-3 py-1.5 text-[11px] font-bold text-blue-100">
+      <div className="rounded-3xl bg-[#075b57] p-5 text-white sm:hidden">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-300/30 px-3 py-1.5 text-[11px] font-bold text-teal-100">
           <Sparkles className="h-3.5 w-3.5" /> Pusat Kendali Operasional
         </div>
         <h2 className="text-[1.65rem] font-extrabold leading-tight">
           Selamat datang, Admin Operasional
         </h2>
-        <p className="mt-2 flex items-center gap-2 text-sm text-blue-100">
+        <p className="mt-2 flex items-center gap-2 text-sm text-teal-100">
           <CalendarDays className="h-4 w-4" /> {displayDate}
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
@@ -316,31 +316,31 @@ function Dashboard({
             <Plus className="h-4 w-4" /> Tambah Kendaraan
           </Button>
           <Button
-            className="h-auto min-h-11 whitespace-normal border border-blue-300/40 bg-[#284789] px-2 text-xs leading-tight text-white shadow-none"
+            className="h-auto min-h-11 whitespace-normal border border-teal-300/40 bg-[#087b73] px-2 text-xs leading-tight text-white shadow-none"
             onClick={() => onCreate("driver")}
           >
             <Plus className="h-4 w-4" /> Tambah Driver
           </Button>
         </div>
       </div>
-      <section className="relative hidden isolate overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#12265f] via-jne-blue to-[#24449a] p-8 text-white shadow-[0_22px_50px_rgba(23,45,114,.24)] sm:block">
+      <section className="relative hidden isolate overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#062b36] via-jne-blue to-[#0aa89a] p-8 text-white shadow-[0_22px_50px_rgba(0,143,131,.24)] sm:block">
         <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[45px] border-white/5" />
-        <div className="absolute -bottom-24 right-1/3 h-48 w-48 rounded-full bg-jne-red/20 blur-3xl" />
+        <div className="absolute -bottom-24 right-1/3 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
         <div className="relative flex flex-col justify-between gap-7 lg:flex-row lg:items-center">
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-blue-100">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-teal-100">
               <Sparkles className="h-3.5 w-3.5" /> Pusat Kendali Operasional
             </div>
             <h2 className="max-w-xl text-3xl font-extrabold leading-tight">
               Selamat datang, Admin Operasional
             </h2>
-            <p className="mt-2 flex items-center gap-2 text-sm text-blue-100">
+            <p className="mt-2 flex items-center gap-2 text-sm text-teal-100">
               <CalendarDays className="h-4 w-4" /> {displayDate}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button
-              className="border border-white/20 bg-white text-jne-blue hover:bg-blue-50"
+              className="border border-white/20 bg-white text-jne-blue hover:bg-teal-50"
               onClick={() => onCreate("vehicle")}
             >
               <Plus className="h-4 w-4" /> Tambah Kendaraan
@@ -717,7 +717,7 @@ function LogReviewModal({ log, onClose }: { log: VehicleLog; onClose: () => void
             <div><Label>KM Awal</Label><Input type="number" min="0" step="1" value={startKm} onChange={(e) => setStartKm(e.target.value)} /></div>
             <div><Label>KM Akhir</Label><Input type="number" min={startKm || "0"} step="1" value={endKm} onChange={(e) => setEndKm(e.target.value)} placeholder="Belum selesai" /></div>
           </div>
-          <div className={`rounded-xl p-3 text-sm font-bold ${distance != null && distance > 300 ? "bg-red-50 text-red-700" : "bg-blue-50 text-jne-blue"}`}>
+          <div className={`rounded-xl p-3 text-sm font-bold ${distance != null && distance > 300 ? "bg-red-50 text-red-700" : "bg-teal-50 text-jne-blue"}`}>
             Jarak hasil revisi: {distance == null ? "—" : `${formatKm(distance)} KM`}
           </div>
           <div><Label>Status verifikasi</Label><Select value={status} onChange={(e) => setStatus(e.target.value as LogStatus)}><option>Belum Selesai</option><option>Selesai</option><option>Perlu Diperiksa</option></Select></div>
@@ -747,7 +747,7 @@ function PhotoButton({
       disabled={disabled}
       onClick={onClick}
       title={`Foto ${label === "A" ? "awal" : "akhir"}`}
-      className="grid h-8 w-8 place-items-center rounded-lg bg-blue-50 text-xs font-extrabold text-jne-blue disabled:bg-slate-100 disabled:text-slate-300"
+      className="grid h-8 w-8 place-items-center rounded-lg bg-teal-50 text-xs font-extrabold text-jne-blue disabled:bg-slate-100 disabled:text-slate-300"
     >
       <Camera className="h-4 w-4" />
     </button>
@@ -947,12 +947,12 @@ function VehiclesPanel({
             className={`group overflow-hidden border-0 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${!v.active ? "opacity-75" : ""}`}
           >
             <div
-              className={`h-1.5 ${v.active ? "bg-gradient-to-r from-jne-blue to-blue-400" : "bg-slate-300"}`}
+              className={`h-1.5 ${v.active ? "bg-gradient-to-r from-jne-blue to-teal-400" : "bg-slate-300"}`}
             />
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
                 <span
-                  className={`rounded-2xl p-3 ${v.active ? "bg-blue-50 text-jne-blue" : "bg-slate-100 text-slate-400"}`}
+                  className={`rounded-2xl p-3 ${v.active ? "bg-teal-50 text-jne-blue" : "bg-slate-100 text-slate-400"}`}
                 >
                   <CarFront className="h-7 w-7" />
                 </span>
@@ -1287,7 +1287,7 @@ function DriversPanel({
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <span
-                    className={`grid h-14 w-14 place-items-center rounded-2xl text-lg font-extrabold ${u.active ? "bg-gradient-to-br from-jne-blue to-blue-500 text-white shadow-lg" : "bg-slate-100 text-slate-400"}`}
+                    className={`grid h-14 w-14 place-items-center rounded-2xl text-lg font-extrabold ${u.active ? "bg-gradient-to-br from-jne-blue to-teal-500 text-white shadow-lg" : "bg-slate-100 text-slate-400"}`}
                   >
                     {initials}
                   </span>
@@ -1671,7 +1671,7 @@ function ExportPanel() {
             ].map((x, i) => (
               <span
                 key={x}
-                className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-jne-blue"
+                className="rounded-lg bg-teal-50 px-3 py-2 text-xs font-semibold text-jne-blue"
               >
                 {i + 1}. {x}
               </span>
@@ -1713,7 +1713,7 @@ function SettingsPanel() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
-            <span className="grid h-16 w-16 place-items-center rounded-2xl bg-blue-50 text-jne-blue">
+            <span className="grid h-16 w-16 place-items-center rounded-2xl bg-teal-50 text-jne-blue">
               <ShieldCheck className="h-8 w-8" />
             </span>
             <div>
@@ -1744,7 +1744,7 @@ function SettingsPanel() {
             <textarea
               value={labels}
               onChange={(e) => setLabels(e.target.value)}
-              className="min-h-28 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-jne-blue focus:ring-4 focus:ring-blue-50"
+              className="min-h-28 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-jne-blue focus:ring-4 focus:ring-teal-50"
               placeholder={"INBOUND\nOUTBOUND"}
             />
             {notice && (

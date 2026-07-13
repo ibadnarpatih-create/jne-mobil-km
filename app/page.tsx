@@ -61,8 +61,8 @@ export default function LoginPage() {
 
   return (
     <main className="relative min-h-dvh overflow-hidden bg-jne-pale px-5 py-8 sm:grid sm:place-items-center">
-      <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-jne-red/10" />
-      <div className="absolute -bottom-40 -left-32 h-96 w-96 rounded-full bg-jne-blue/10" />
+      <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-movetra-teal/10" />
+      <div className="absolute -bottom-40 -left-32 h-96 w-96 rounded-full bg-movetra-navy/10" />
       <div className="relative mx-auto w-full max-w-md">
         <div className="mb-7 flex justify-center">
           <Brand />

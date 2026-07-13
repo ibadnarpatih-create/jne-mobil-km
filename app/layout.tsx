@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     apple: "/icon-192.png?v=2",
   },
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, maximumScale: 1, themeColor: "#172d72" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, maximumScale: 1, themeColor: "#008f83" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="id"><body><DemoStoreProvider>{children}</DemoStoreProvider><ServiceWorkerRegister /></body></html>;

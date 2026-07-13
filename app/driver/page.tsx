@@ -270,9 +270,9 @@ function HomeScreen({
     .join("");
   return (
     <div className="space-y-5 p-5">
-      <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#12265f] via-jne-blue to-[#284ca8] p-6 text-white shadow-[0_22px_45px_rgba(23,45,114,.25)]">
+      <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#062b36] via-jne-blue to-[#0aa89a] p-6 text-white shadow-[0_22px_45px_rgba(0,143,131,.24)]">
         <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full border-[38px] border-white/5" />
-        <div className="absolute -bottom-20 left-16 h-40 w-40 rounded-full bg-jne-red/25 blur-3xl" />
+        <div className="absolute -bottom-20 left-16 h-40 w-40 rounded-full bg-emerald-300/20 blur-3xl" />
         <div className="relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -280,7 +280,7 @@ function HomeScreen({
                 {initials}
               </span>
               <div>
-                <p className="text-xs font-semibold text-blue-200">
+                <p className="text-xs font-semibold text-teal-200">
                   Halo, selamat bekerja
                 </p>
                 <h1 className="text-xl font-extrabold capitalize">
@@ -293,7 +293,7 @@ function HomeScreen({
               ONLINE
             </span>
           </div>
-          <div className="mt-6 flex items-center gap-2 text-xs text-blue-100">
+          <div className="mt-6 flex items-center gap-2 text-xs text-teal-100">
             <CalendarDays className="h-4 w-4" />
             {new Intl.DateTimeFormat("id-ID", {
               weekday: "long",
@@ -305,7 +305,7 @@ function HomeScreen({
           </div>
           <div className="mt-5 grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-200">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-teal-200">
                 Total Perjalanan
               </p>
               <p className="mt-1 text-xl font-extrabold">
@@ -313,7 +313,7 @@ function HomeScreen({
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-200">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-teal-200">
                 Total Jarak
               </p>
               <p className="mt-1 text-xl font-extrabold">
@@ -392,7 +392,7 @@ function HomeScreen({
             </div>
             <Button
               size="lg"
-              className="mt-5 w-full shadow-lg shadow-blue-200"
+              className="mt-5 w-full shadow-lg shadow-teal-200"
               onClick={onStart}
             >
               <Gauge className="h-5 w-5" /> MULAI TRIP BERIKUTNYA
@@ -408,11 +408,11 @@ function HomeScreen({
         </Card>
       ) : (
         <Card className="overflow-hidden border-0 shadow-soft">
-          <div className="h-1.5 bg-gradient-to-r from-jne-red to-orange-400" />
+          <div className="h-1.5 bg-gradient-to-r from-jne-blue to-emerald-400" />
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-jne-red">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-jne-blue">
                   Siap Memulai
                 </p>
                 <h2 className="mt-2 text-xl font-extrabold text-slate-900">
@@ -422,7 +422,7 @@ function HomeScreen({
                   Pilih kendaraan, masukkan kilometer, lalu foto dashboard.
                 </p>
               </div>
-              <span className="rounded-2xl bg-red-50 p-3 text-jne-red">
+              <span className="rounded-2xl bg-teal-50 p-3 text-jne-blue">
                 <Gauge className="h-7 w-7" />
               </span>
             </div>
@@ -439,7 +439,7 @@ function HomeScreen({
             </div>
             <Button
               size="lg"
-              className="w-full shadow-lg shadow-blue-200"
+              className="w-full shadow-lg shadow-teal-200"
               onClick={onStart}
             >
               <Gauge className="h-5 w-5" /> INPUT KM AWAL{" "}
@@ -454,10 +454,10 @@ function HomeScreen({
         </p>
         <button
           onClick={onHistory}
-          className="group flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-blue-200 hover:shadow-md"
+          className="group flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-teal-200 hover:shadow-md"
         >
           <span className="flex items-center gap-3">
-            <span className="rounded-xl bg-blue-50 p-3 text-jne-blue">
+            <span className="rounded-xl bg-teal-50 p-3 text-jne-blue">
               <History className="h-5 w-5" />
             </span>
             <span>
@@ -472,9 +472,9 @@ function HomeScreen({
           <ArrowRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-jne-blue" />
         </button>
       </div>
-      <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+      <div className="flex items-start gap-3 rounded-2xl border border-teal-100 bg-teal-50/70 p-4">
         <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-jne-blue" />
-        <p className="text-xs leading-5 text-blue-800">
+        <p className="text-xs leading-5 text-teal-800">
           <strong>Tips hari ini:</strong> Pastikan angka KM pada dashboard
           terlihat jelas sebelum menyimpan foto.
         </p>
@@ -714,8 +714,8 @@ function TripForm({
               </div>
             )}
             {vehicle && (
-              <div className="rounded-xl bg-blue-50 px-4 py-3">
-                <p className="text-xs font-semibold text-blue-700">
+              <div className="rounded-xl bg-teal-50 px-4 py-3">
+                <p className="text-xs font-semibold text-teal-700">
                   {isStart ? "KM terakhir kendaraan" : "KM awal perjalanan"}
                 </p>
                 <p className="mt-1 text-lg font-extrabold text-jne-blue">
@@ -867,8 +867,8 @@ function SuccessScreen({
               <>
                 <InfoBox label="KM Akhir" value={formatKm(log.endKm)} />
                 <InfoBox label="Jam Akhir" value={log.endTime ?? "—"} />
-                <div className="col-span-2 rounded-xl bg-blue-50 p-4 text-center">
-                  <p className="text-xs font-semibold text-blue-700">
+                <div className="col-span-2 rounded-xl bg-teal-50 p-4 text-center">
+                  <p className="text-xs font-semibold text-teal-700">
                     Jarak Tempuh
                   </p>
                   <p className="mt-1 text-3xl font-extrabold text-jne-blue">

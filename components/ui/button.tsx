@@ -8,8 +8,8 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({ className, variant = "primary", size = "default", ...props }: Props) {
   const variants = {
-    primary: "bg-jne-blue text-white hover:bg-[#10245f] shadow-sm",
-    secondary: "bg-jne-red text-white hover:bg-[#c8171d] shadow-sm",
+    primary: "bg-jne-blue text-white hover:bg-[#006c65] shadow-sm",
+    secondary: "bg-movetra-navy text-white hover:bg-[#0c2d4b] shadow-sm",
     outline: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
     danger: "bg-red-50 text-red-700 hover:bg-red-100",
     ghost: "text-slate-600 hover:bg-slate-100",

@@ -167,7 +167,7 @@ export function BulkImportModal({
       <div className="mx-auto my-3 w-full max-w-4xl overflow-hidden rounded-[1.5rem] bg-white shadow-2xl sm:my-8">
         <div className="flex items-start justify-between border-b border-slate-100 px-5 py-5 sm:px-7">
           <div className="flex gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-jne-blue">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-teal-50 text-jne-blue">
               <FileSpreadsheet className="h-6 w-6" />
             </span>
             <div>
@@ -188,7 +188,7 @@ export function BulkImportModal({
         </div>
         <div className="space-y-5 p-5 sm:p-7">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
+            <div className="rounded-2xl border border-teal-100 bg-teal-50/60 p-5">
               <p className="text-xs font-extrabold uppercase tracking-wider text-jne-blue">
                 Langkah 1
               </p>
@@ -202,7 +202,7 @@ export function BulkImportModal({
               <a
                 href={config[kind].template}
                 download={config[kind].templateName}
-                className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl border border-blue-200 bg-white px-4 text-sm font-bold text-jne-blue hover:bg-blue-50"
+                className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl border border-teal-200 bg-white px-4 text-sm font-bold text-jne-blue hover:bg-teal-50"
               >
                 <Download className="h-4 w-4" /> Download Template Excel
               </a>
