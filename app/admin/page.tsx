@@ -68,6 +68,13 @@ const nav: { id: View; label: string; icon: typeof LayoutDashboard; group?: "BBM
   { id: "settings", label: "Pengaturan Akun", icon: Settings },
 ];
 
+const validViews = new Set<View>(nav.map((item) => item.id));
+
+function viewFromUrl(): View {
+  const value = new URLSearchParams(window.location.search).get("view");
+  return value && validViews.has(value as View) ? (value as View) : "dashboard";
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const store = useDemoStore();
@@ -76,6 +83,16 @@ export default function AdminPage() {
   const [createTarget, setCreateTarget] = useState<"vehicle" | "driver" | null>(
     null,
   );
+  useEffect(() => {
+    const syncView = () => {
+      setView(viewFromUrl());
+      setMenu(false);
+      setCreateTarget(null);
+    };
+    syncView();
+    window.addEventListener("popstate", syncView);
+    return () => window.removeEventListener("popstate", syncView);
+  }, []);
   useEffect(() => {
     if (
       store.hydrated &&
@@ -94,6 +111,17 @@ export default function AdminPage() {
       </div>
     );
   const choose = (id: View) => {
+    if (id !== view) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("transaction");
+      if (id === "dashboard") url.searchParams.delete("view");
+      else url.searchParams.set("view", id);
+      window.history.pushState(
+        { ...(window.history.state ?? {}) },
+        "",
+        `${url.pathname}${url.search}${url.hash}`,
+      );
+    }
     setView(id);
     setMenu(false);
   };
@@ -176,10 +204,10 @@ export default function AdminPage() {
       <div className="p-3 sm:p-7">
         {view === "dashboard" && (
           <Dashboard
-            onNavigate={setView}
+            onNavigate={choose}
             onCreate={(target) => {
               setCreateTarget(target);
-              setView(target === "vehicle" ? "vehicles" : "drivers");
+              choose(target === "vehicle" ? "vehicles" : "drivers");
             }}
           />
         )}

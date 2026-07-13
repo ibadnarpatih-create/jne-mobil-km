@@ -23,6 +23,30 @@ export function FuelTransactionsPanel({ mode }: { mode: "transactions" | "valida
   const [from, setFrom] = useState(""); const [to, setTo] = useState("");
   const reload = async () => { setLoading(true); setError(""); try { const [transactions, masters] = await Promise.all([loadFuelTransactions(), loadFuelMasterData()]); setItems(transactions); setMaster(masters); } catch (cause) { setError(cause instanceof Error ? cause.message : "Transaksi BBM gagal dimuat."); } finally { setLoading(false); } };
   useEffect(() => { void reload(); }, []);
+  useEffect(() => {
+    const syncSelected = () => {
+      const id = new URLSearchParams(window.location.search).get("transaction");
+      setSelected(id ? items.find((item) => item.id === id) ?? null : null);
+    };
+    syncSelected();
+    window.addEventListener("popstate", syncSelected);
+    return () => window.removeEventListener("popstate", syncSelected);
+  }, [items]);
+  const openDetail = (item: FuelTransactionRecord) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("transaction", item.id);
+    window.history.pushState(
+      { ...(window.history.state ?? {}) },
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+    setSelected(item);
+  };
+  const closeDetail = () => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("transaction")) window.history.back();
+    else setSelected(null);
+  };
   const filtered = useMemo(() => items.filter((item) => {
     if (mode === "validation" && !["SUBMITTED", "NEED_REVIEW"].includes(item.status)) return false;
     if (status && item.status !== status) return false;
@@ -34,8 +58,8 @@ export function FuelTransactionsPanel({ mode }: { mode: "transactions" | "valida
   return <div className="space-y-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-2xl font-extrabold">{title}</h2><p className="mt-1 text-sm text-slate-500">{mode === "validation" ? `${filtered.length} transaksi menunggu pemeriksaan` : "Data pengisian terhubung dengan kendaraan dan odometer."}</p></div>{mode === "report" && <div className="flex gap-2"><Button variant="outline" onClick={() => exportCsv(filtered, users, vehicles, master)}><Download className="h-4 w-4" /> CSV</Button><Button onClick={() => exportExcel(filtered, users, vehicles, master)}><Download className="h-4 w-4" /> Excel</Button></div>}</div>
     <Card><CardContent className="grid gap-3 pt-5 sm:grid-cols-2 lg:grid-cols-4"><div className="relative"><Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" /><Input className="pl-12" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari plat, driver..." /></div><Select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Semua status</option>{["SUBMITTED","VERIFIED","NEED_REVIEW","REJECTED"].map((value) => <option key={value}>{value}</option>)}</Select><Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} title="Tanggal mulai" /><Input type="date" value={to} onChange={(event) => setTo(event.target.value)} title="Tanggal akhir" /></CardContent></Card>
     {error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p>}
-    {loading ? <Card><CardContent className="py-12 text-center text-sm text-slate-500">Memuat transaksi BBM...</CardContent></Card> : !filtered.length ? <Card><CardContent className="py-12 text-center text-sm text-slate-500">Belum ada transaksi BBM sesuai filter.</CardContent></Card> : <TransactionTable items={filtered} users={users} vehicles={vehicles} master={master} onDetail={setSelected} />}
-    {selected && <TransactionDetail item={selected} users={users} vehicles={vehicles} master={master} allowReview={mode === "validation"} onClose={() => setSelected(null)} onReviewed={async () => { setSelected(null); await reload(); }} />}
+    {loading ? <Card><CardContent className="py-12 text-center text-sm text-slate-500">Memuat transaksi BBM...</CardContent></Card> : !filtered.length ? <Card><CardContent className="py-12 text-center text-sm text-slate-500">Belum ada transaksi BBM sesuai filter.</CardContent></Card> : <TransactionTable items={filtered} users={users} vehicles={vehicles} master={master} onDetail={openDetail} />}
+    {selected && <TransactionDetail item={selected} users={users} vehicles={vehicles} master={master} allowReview={mode === "validation"} onClose={closeDetail} onReviewed={async () => { closeDetail(); await reload(); }} />}
   </div>;
 }
 

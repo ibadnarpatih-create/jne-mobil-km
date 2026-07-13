@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -34,6 +34,12 @@ import { compressImage } from "@/lib/image";
 import { FuelInputScreen, FuelSubmitSuccess } from "@/components/fuel/fuel-input-screen";
 
 type Screen = "home" | "history" | "start" | "end" | "success" | "fuel" | "fuel-success";
+const validScreens = new Set<Screen>(["home", "history", "start", "end", "success", "fuel", "fuel-success"]);
+
+function screenFromUrl(): Screen {
+  const value = new URLSearchParams(window.location.search).get("screen");
+  return value && validScreens.has(value as Screen) ? (value as Screen) : "home";
+}
 
 export default function DriverPage() {
   const router = useRouter();
@@ -41,6 +47,9 @@ export default function DriverPage() {
   const { currentUser, vehicles, logs, hydrated, logout } = store;
   const [screen, setScreen] = useState<Screen>("home");
   const [lastResult, setLastResult] = useState<VehicleLog | null>(null);
+  const [formDirty, setFormDirty] = useState(false);
+  const screenRef = useRef<Screen>("home");
+  const dirtyRef = useRef(false);
   const today = jakartaNow().date;
   const myLogs = useMemo(
     () => logs.filter((l) => l.driverId === currentUser?.id),
@@ -55,6 +64,37 @@ export default function DriverPage() {
     if (hydrated && (!currentUser || currentUser.role !== "DRIVER"))
       router.replace("/");
   }, [hydrated, currentUser, router]);
+  useEffect(() => {
+    screenRef.current = screen;
+  }, [screen]);
+  useEffect(() => {
+    dirtyRef.current = formDirty;
+  }, [formDirty]);
+  useEffect(() => {
+    const syncScreen = () => {
+      const next = screenFromUrl();
+      const leavingForm = ["start", "end", "fuel"].includes(screenRef.current) && next !== screenRef.current;
+      if (
+        leavingForm &&
+        dirtyRef.current &&
+        !window.confirm("Data yang belum disimpan akan hilang. Tetap kembali?")
+      ) {
+        window.history.go(1);
+        return;
+      }
+      dirtyRef.current = false;
+      setFormDirty(false);
+      screenRef.current = next;
+      setScreen(next);
+    };
+    syncScreen();
+    window.addEventListener("popstate", syncScreen);
+    return () => window.removeEventListener("popstate", syncScreen);
+  }, []);
+  const handleDirtyChange = useCallback((dirty: boolean) => {
+    dirtyRef.current = dirty;
+    setFormDirty(dirty);
+  }, []);
   if (!hydrated || !currentUser || currentUser.role !== "DRIVER")
     return (
       <div className="grid min-h-dvh place-items-center text-sm text-slate-500">
@@ -62,7 +102,34 @@ export default function DriverPage() {
       </div>
     );
 
-  const goHome = () => setScreen("home");
+  const navigate = (next: Screen, replace = false) => {
+    if (next === screen) return;
+    const url = new URL(window.location.href);
+    if (next === "home") url.searchParams.delete("screen");
+    else url.searchParams.set("screen", next);
+    window.history[replace ? "replaceState" : "pushState"](
+      { ...(window.history.state ?? {}) },
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+    dirtyRef.current = false;
+    setFormDirty(false);
+    screenRef.current = next;
+    setScreen(next);
+  };
+  const goBack = () => {
+    if (
+      dirtyRef.current &&
+      !window.confirm("Data yang belum disimpan akan hilang. Tetap kembali?")
+    ) return;
+    dirtyRef.current = false;
+    setFormDirty(false);
+    window.history.back();
+  };
+  const goHome = () => {
+    if (screen === "success" || screen === "fuel-success") goBack();
+    else navigate("home");
+  };
   return (
     <main className="mx-auto min-h-dvh max-w-2xl bg-jne-pale pb-24">
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 px-5 py-3 backdrop-blur">
@@ -88,22 +155,23 @@ export default function DriverPage() {
           todayCompleted={todayCompleted}
           logs={myLogs}
           vehicles={vehicles}
-          onStart={() => setScreen("start")}
-          onEnd={() => setScreen("end")}
-          onHistory={() => setScreen("history")}
+          onStart={() => navigate("start")}
+          onEnd={() => navigate("end")}
+          onHistory={() => navigate("history")}
         />
       )}
       {screen === "history" && (
-        <HistoryScreen logs={myLogs} vehicles={vehicles} onBack={goHome} />
+        <HistoryScreen logs={myLogs} vehicles={vehicles} onBack={goBack} />
       )}
       {screen === "start" && (
         <TripForm
           mode="start"
           activeTrip={activeTrip}
-          onBack={goHome}
+          onBack={goBack}
+          onDirtyChange={handleDirtyChange}
           onSaved={(log) => {
             setLastResult(log);
-            setScreen("success");
+            navigate("success", true);
           }}
         />
       )}
@@ -111,10 +179,11 @@ export default function DriverPage() {
         <TripForm
           mode="end"
           activeTrip={activeTrip}
-          onBack={goHome}
+          onBack={goBack}
+          onDirtyChange={handleDirtyChange}
           onSaved={(log) => {
             setLastResult(log);
-            setScreen("success");
+            navigate("success", true);
           }}
         />
       )}
@@ -130,8 +199,9 @@ export default function DriverPage() {
           user={currentUser}
           vehicles={vehicles}
           logs={myLogs}
-          onBack={goHome}
-          onSuccess={() => setScreen("fuel-success")}
+          onBack={goBack}
+          onDirtyChange={handleDirtyChange}
+          onSuccess={() => navigate("fuel-success", true)}
         />
       )}
       {screen === "fuel-success" && <FuelSubmitSuccess onDone={goHome} />}
@@ -146,14 +216,14 @@ export default function DriverPage() {
             Beranda
           </button>
           <button
-            onClick={() => setScreen("fuel")}
+            onClick={() => navigate("fuel")}
             className="flex flex-1 flex-col items-center gap-1 py-2 text-xs font-bold text-slate-400"
           >
             <Fuel className="h-5 w-5" />
             Input BBM
           </button>
           <button
-            onClick={() => setScreen("history")}
+            onClick={() => navigate("history")}
             className={`flex flex-1 flex-col items-center gap-1 py-2 text-xs font-bold ${screen === "history" ? "text-jne-blue" : "text-slate-400"}`}
           >
             <History className="h-5 w-5" />
@@ -444,11 +514,13 @@ function TripForm({
   mode,
   activeTrip,
   onBack,
+  onDirtyChange,
   onSaved,
 }: {
   mode: "start" | "end";
   activeTrip?: VehicleLog;
   onBack: () => void;
+  onDirtyChange: (dirty: boolean) => void;
   onSaved: (log: VehicleLog) => void;
 }) {
   const store = useDemoStore();
@@ -495,6 +567,10 @@ function TripForm({
         { timeout: 5000 },
       );
   }, []);
+  useEffect(() => {
+    onDirtyChange(Boolean(km || photo));
+    return () => onDirtyChange(false);
+  }, [km, photo, onDirtyChange]);
   const onFile = async (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
