@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { createUuid, jakartaNow } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { safeUploadName, uploadToImageKit } from "@/lib/imagekit/client";
 import type { User, Vehicle, VehicleLog } from "@/lib/types";
 
 const seedUsers: User[] = [
@@ -326,13 +327,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     const vehicle = vehicles.find((v) => v.id === vehicleId);
     const now = jakartaNow();
     const unique = `${Date.now()}-${createUuid().slice(0, 8)}`;
-    const path = `${currentUser.id}/${now.date}_${safeName(vehicle?.plate ?? "KENDARAAN")}_${safeName(currentUser.name)}_${suffix}_${unique}.jpg`;
-    const blob = await (await fetch(photo)).blob();
-    const { error } = await supabase.storage
-      .from("dashboard-photos")
-      .upload(path, blob, { contentType: "image/jpeg", upsert: false });
-    if (error) throw error;
-    return { path, url: (await signedPhoto(path)) ?? path };
+    const result = await uploadToImageKit({
+      file: photo,
+      fileName: safeUploadName(`${now.date}_${safeName(vehicle?.plate ?? "KENDARAAN")}_${safeName(currentUser.name)}_${suffix}_${unique}.jpg`),
+      folder: `/movetra/vehicle-logs/${currentUser.id}/${now.date}`,
+      tags: ["movetra", "vehicle-log", suffix.toLowerCase()],
+    });
+    return { path: result.url!, url: result.url! };
   };
 
   const value = useMemo<Store>(

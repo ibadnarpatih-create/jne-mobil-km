@@ -13,6 +13,7 @@ import {
   CircleAlert,
   Download,
   FileSpreadsheet,
+  FolderOpen,
   Fuel,
   Gauge,
   KeyRound,
@@ -48,11 +49,12 @@ import type { LogStatus, User, Vehicle, VehicleLog } from "@/lib/types";
 import { BulkImportModal } from "@/components/bulk-import-modal";
 import { FuelMasterPanel } from "@/components/fuel/fuel-master-panel";
 import { FuelTransactionsPanel } from "@/components/fuel/fuel-transactions-panel";
+import { FileManagerPanel } from "@/components/file-manager-panel";
 
 type View =
   "dashboard" | "logs" | "vehicles" | "drivers" | "export" | "settings"
   | "fuel-types" | "fuel-prices" | "fuel-stations"
-  | "fuel-transactions" | "fuel-validation" | "fuel-report";
+  | "fuel-transactions" | "fuel-validation" | "fuel-report" | "file-manager";
 const nav: { id: View; label: string; icon: typeof LayoutDashboard; group?: "BBM" }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "logs", label: "Data Harian Mobil", icon: BarChart3 },
@@ -64,6 +66,7 @@ const nav: { id: View; label: string; icon: typeof LayoutDashboard; group?: "BBM
   { id: "fuel-types", label: "Jenis BBM", icon: Fuel, group: "BBM" },
   { id: "fuel-prices", label: "Harga BBM", icon: FileSpreadsheet, group: "BBM" },
   { id: "fuel-stations", label: "SPBU / Vendor", icon: Route, group: "BBM" },
+  { id: "file-manager", label: "File Manager", icon: FolderOpen },
   { id: "export", label: "Export Laporan", icon: Download },
   { id: "settings", label: "Pengaturan Akun", icon: Settings },
 ];
@@ -232,6 +235,7 @@ export default function AdminPage() {
         {view === "fuel-transactions" && <FuelTransactionsPanel mode="transactions" />}
         {view === "fuel-validation" && <FuelTransactionsPanel mode="validation" />}
         {view === "fuel-report" && <FuelTransactionsPanel mode="report" />}
+        {view === "file-manager" && <FileManagerPanel />}
       </div>
     </main>
   );

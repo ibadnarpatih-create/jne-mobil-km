@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { createUuid } from "@/lib/utils";
+import { safeUploadName, uploadToImageKit } from "@/lib/imagekit/client";
 
 export type SubmitFuelTransaction = {
   driverId: string;
@@ -32,14 +33,14 @@ async function uploadFuelPhoto(
   if (!supabase) return dataUrl;
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Sesi pengguna tidak ditemukan.");
-  const path = `${auth.user.id}/${new Date().toISOString().slice(0, 10)}_${kind}_${safeName(createUuid())}.jpg`;
-  const blob = await (await fetch(dataUrl)).blob();
-  const { error } = await supabase.storage.from("fuel-photos").upload(path, blob, {
-    contentType: "image/jpeg",
-    upsert: false,
+  const date = new Date().toISOString().slice(0, 10);
+  const result = await uploadToImageKit({
+    file: dataUrl,
+    fileName: safeUploadName(`${date}_${kind}_${safeName(createUuid())}.jpg`),
+    folder: `/movetra/fuel/${auth.user.id}/${date}`,
+    tags: ["movetra", "fuel", kind],
   });
-  if (error) throw error;
-  return path;
+  return result.url!;
 }
 
 export async function submitFuelTransaction(input: SubmitFuelTransaction): Promise<string> {
