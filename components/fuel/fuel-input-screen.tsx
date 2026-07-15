@@ -25,8 +25,6 @@ export function FuelInputScreen({ user, vehicles, logs, onBack, onSuccess, onDir
   const [fuelTypeId, setFuelTypeId] = useState("");
   const [realPayment, setRealPayment] = useState("");
   const [odometer, setOdometer] = useState("");
-  const [stationId, setStationId] = useState("");
-  const [manualStation, setManualStation] = useState("");
   const [notes, setNotes] = useState("");
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [kmBeforePhoto, setKmBeforePhoto] = useState("");
@@ -60,10 +58,10 @@ export function FuelInputScreen({ user, vehicles, logs, onBack, onSuccess, onDir
     );
   }, []);
   useEffect(() => {
-    const dirty = Boolean(fuelTypeId || realPayment || odometer || stationId || manualStation || notes || kmBeforePhoto || kmAfterPhoto || dispenserPhoto || receiptPhoto);
+    const dirty = Boolean(fuelTypeId || realPayment || odometer || notes || kmBeforePhoto || kmAfterPhoto || dispenserPhoto || receiptPhoto);
     onDirtyChange(dirty);
     return () => onDirtyChange(false);
-  }, [dispenserPhoto, fuelTypeId, kmAfterPhoto, kmBeforePhoto, manualStation, notes, odometer, onDirtyChange, realPayment, receiptPhoto, stationId]);
+  }, [dispenserPhoto, fuelTypeId, kmAfterPhoto, kmBeforePhoto, notes, odometer, onDirtyChange, realPayment, receiptPhoto]);
   const refreshCoordinates = () => {
     if (navigator.geolocation) navigator.geolocation.getCurrentPosition(
       (position) => setCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
@@ -81,7 +79,7 @@ export function FuelInputScreen({ user, vehicles, logs, onBack, onSuccess, onDir
     if (!window.confirm("Kirim transaksi BBM untuk diperiksa admin? Data perjalanan tidak dapat diganti setelah dikirim.")) return;
     setBusy(true);
     try {
-      await submitFuelTransaction({ driverId: user.id, vehicleId, tripIds: automaticallyMatchedTrips.map((trip) => trip.id), transactionDate: date, transactionTime: time, odometerAtRefuel: Number(odometer), fuelTypeId, realPayment: Number(realPayment), fuelStationId: stationId || undefined, fuelStationName: stationId ? undefined : manualStation, latitude: coordinates?.latitude, longitude: coordinates?.longitude, kmBeforePhoto, kmAfterPhoto, dispenserPhoto, receiptPhoto, notes });
+      await submitFuelTransaction({ driverId: user.id, vehicleId, tripIds: automaticallyMatchedTrips.map((trip) => trip.id), transactionDate: date, transactionTime: time, odometerAtRefuel: Number(odometer), fuelTypeId, realPayment: Number(realPayment), latitude: coordinates?.latitude, longitude: coordinates?.longitude, kmBeforePhoto, kmAfterPhoto, dispenserPhoto, receiptPhoto, notes });
       onSuccess();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Transaksi BBM belum berhasil dikirim."); }
     finally { setBusy(false); }
@@ -101,8 +99,6 @@ export function FuelInputScreen({ user, vehicles, logs, onBack, onSuccess, onDir
     </CardContent></Card>
     <Card><CardHeader><h2 className="font-extrabold">Data pendukung</h2></CardHeader><CardContent className="space-y-4">
       <div><Label>KM saat pengisian</Label><Input type="number" inputMode="numeric" value={odometer} min={previousFuel?.odometer ?? 0} onChange={(event) => setOdometer(event.target.value.replace(/\D/g, ""))} />{previousFuel && <p className="mt-2 text-xs text-slate-500">Pengisian sebelumnya: {formatKm(previousFuel.odometer)} KM pada {previousFuel.date}</p>}</div>
-      <div><Label>SPBU / Vendor</Label><Select value={stationId} onChange={(event) => setStationId(event.target.value)}><option value="">Lokasi manual / vendor lain</option>{master.fuelStations.filter((item) => item.isActive).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
-      {!stationId && <div><Label>Nama SPBU</Label><Input value={manualStation} onChange={(event) => setManualStation(event.target.value)} /></div>}
       <PhotoField label="Foto KM sebelum pengisian" value={kmBeforePhoto} onChange={setKmBeforePhoto} onCaptureLocation={refreshCoordinates} />
       <PhotoField label="Foto KM setelah pengisian" value={kmAfterPhoto} onChange={setKmAfterPhoto} onCaptureLocation={refreshCoordinates} />
       <PhotoField label="Foto dispenser SPBU setelah pengisian" value={dispenserPhoto} onChange={setDispenserPhoto} onCaptureLocation={refreshCoordinates} />
