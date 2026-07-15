@@ -19,7 +19,7 @@ export function calculateFuel(input: FuelCalculationInput): FuelCalculation {
   const estimatedAmount = roundMoney(input.pricePerLiter * input.totalLiters);
   return {
     estimatedAmount,
-    paymentDifference: roundMoney(input.realPayment - estimatedAmount),
+    paymentDifference: roundMoney(estimatedAmount - input.realPayment),
     fuelEfficiency:
       input.totalLiters > 0 ? roundRatio(input.totalDistance / input.totalLiters) : null,
     costPerKm:

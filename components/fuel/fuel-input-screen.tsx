@@ -45,7 +45,7 @@ export function FuelInputScreen({ user, vehicles, logs, onBack, onSuccess, onDir
   const activePrice = master.fuelPrices.find((price) => price.fuelTypeId === fuelTypeId && price.isActive && price.effectiveStartDate <= date && (!price.effectiveEndDate || price.effectiveEndDate >= date));
   const estimatedLiters = Math.round((refuelDistance / 8) * 100) / 100;
   const estimatedAmount = Math.round(estimatedLiters * (activePrice?.pricePerLiter ?? 0));
-  const paymentDifference = Number(realPayment) - estimatedAmount;
+  const paymentDifference = estimatedAmount - Number(realPayment);
 
   useEffect(() => { loadFuelMasterData().then(setMaster).catch((cause) => setError(cause instanceof Error ? cause.message : "Master BBM gagal dimuat.")); }, []);
   useEffect(() => {
