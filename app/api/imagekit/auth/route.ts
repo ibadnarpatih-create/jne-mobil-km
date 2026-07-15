@@ -7,7 +7,10 @@ export async function GET() {
     const user = await requireApiUser();
     const { publicKey, privateKey, urlEndpoint } = getImageKitConfig();
     const authenticationParameters = getUploadAuthParams({ publicKey, privateKey });
-    return Response.json({ ...authenticationParameters, publicKey, urlEndpoint, userId: user.id });
+    return Response.json(
+      { ...authenticationParameters, publicKey, urlEndpoint, userId: user.id },
+      { headers: { "Cache-Control": "no-store, max-age=0" } },
+    );
   } catch (error) {
     return authErrorResponse(error);
   }
