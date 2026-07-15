@@ -93,7 +93,7 @@ begin
   ) values (
     p_vehicle_id, v_driver_id, p_transaction_date, p_transaction_time, p_odometer_at_refuel,
     p_fuel_type_id, v_price, null, v_estimated_liters, v_standard,
-    v_estimated, p_real_payment, round(p_real_payment - v_estimated, 2), v_distance,
+    v_estimated, p_real_payment, round(v_estimated - p_real_payment, 2), v_distance,
     case when v_distance > 0 then v_standard end,
     case when v_distance > 0 then round(v_estimated / v_distance, 2) end,
     p_fuel_station_id, nullif(trim(p_fuel_station_name), ''), p_receipt_photo_url,

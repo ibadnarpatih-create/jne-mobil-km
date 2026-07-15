@@ -57,7 +57,7 @@ export async function submitFuelTransaction(input: SubmitFuelTransaction): Promi
     const masters = await import("@/lib/fuel/repository").then((module) => module.loadFuelMasterData());
     const price = masters.fuelPrices.find((item) => item.fuelTypeId === input.fuelTypeId && item.isActive && item.effectiveStartDate <= input.transactionDate && (!item.effectiveEndDate || item.effectiveEndDate >= input.transactionDate))?.pricePerLiter ?? 0;
     const estimatedAmount = Math.round(estimatedLiters * price);
-    localStorage.setItem(DEMO_KEY, JSON.stringify([{ id, ...input, pricePerLiter: price, previousOdometer, totalDistance: distance, estimatedLiters, estimatedAmount, paymentDifference: input.realPayment - estimatedAmount, standardKmPerLiter: 8, status: "SUBMITTED", createdAt: new Date().toISOString() }, ...current]));
+    localStorage.setItem(DEMO_KEY, JSON.stringify([{ id, ...input, pricePerLiter: price, previousOdometer, totalDistance: distance, estimatedLiters, estimatedAmount, paymentDifference: estimatedAmount - input.realPayment, standardKmPerLiter: 8, status: "SUBMITTED", createdAt: new Date().toISOString() }, ...current]));
     return id;
   }
   const [receiptPhotoPath, kmBeforePhotoPath, kmAfterPhotoPath, dispenserPhotoPath] = await Promise.all([
