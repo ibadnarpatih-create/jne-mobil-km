@@ -86,3 +86,14 @@ export async function deleteFuelTransaction(id: string): Promise<void> {
   const { error } = await supabase.from("fuel_transactions").delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function updateFuelTransaction(id: string, values: { odometerAtRefuel: number; realPayment: number; notes?: string }): Promise<void> {
+  const supabase = createClient();
+  if (!supabase) {
+    const rows = JSON.parse(localStorage.getItem(DEMO_KEY) ?? "[]") as TransactionRow[];
+    localStorage.setItem(DEMO_KEY, JSON.stringify(rows.map((row) => row.id === id ? { ...row, odometerAtRefuel: values.odometerAtRefuel, realPayment: values.realPayment, paymentDifference: Number(row.estimatedAmount ?? 0) - values.realPayment, notes: values.notes } : row)));
+    return;
+  }
+  const { error } = await supabase.from("fuel_transactions").update({ odometer_at_refuel: values.odometerAtRefuel, real_payment: values.realPayment, notes: values.notes || null, status: "NEED_REVIEW" }).eq("id", id);
+  if (error) throw error;
+}
