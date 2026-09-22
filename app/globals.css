@@ -34,13 +34,15 @@ body {
 .movetra-car-marker span {
   display: grid;
   place-items: center;
-  width: 29px;
-  height: 29px;
-  border: 2px solid #fff;
-  border-radius: 9999px;
-  background: #14b8a6;
-  box-shadow: 0 2px 8px rgb(15 23 42 / 35%);
-  font-size: 16px;
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 2px 4px rgb(15 23 42 / 35%));
+}
+
+.movetra-car-marker svg {
+  display: block;
+  width: 34px;
+  height: 34px;
 }
 
 .movetra-car-marker b {
