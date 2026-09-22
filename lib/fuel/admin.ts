@@ -75,3 +75,14 @@ export async function reviewFuelTransaction(id: string, action: "VERIFY" | "REJE
   const { error } = await supabase.rpc("review_fuel_transaction", { p_transaction_id: id, p_action: action, p_notes: notes || null });
   if (error) throw error;
 }
+
+export async function deleteFuelTransaction(id: string): Promise<void> {
+  const supabase = createClient();
+  if (!supabase) {
+    const rows = JSON.parse(localStorage.getItem(DEMO_KEY) ?? "[]") as TransactionRow[];
+    localStorage.setItem(DEMO_KEY, JSON.stringify(rows.filter((row) => row.id !== id)));
+    return;
+  }
+  const { error } = await supabase.from("fuel_transactions").delete().eq("id", id);
+  if (error) throw error;
+}
