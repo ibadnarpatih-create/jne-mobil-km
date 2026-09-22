@@ -59,7 +59,7 @@ export function TrackingPanel() {
       if (cancelled || !mapRef.current) return;
       if (!leafletRef.current) {
         const map = L.map(mapRef.current, { zoomControl: true }).setView([-6.2, 106.816666], 10);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors" }).addTo(map);
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution: "© OpenStreetMap © CARTO", subdomains: "abcd", maxZoom: 20 }).addTo(map);
         leafletRef.current = { map, layer: L.layerGroup().addTo(map) };
       }
       const { map, layer } = leafletRef.current;
