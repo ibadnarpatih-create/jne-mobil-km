@@ -53,6 +53,10 @@ body {
   box-shadow: 0 1px 4px rgb(15 23 42 / 20%);
 }
 
+.movetra-dark-map .leaflet-tile-pane {
+  filter: invert(92%) hue-rotate(180deg) brightness(82%) contrast(88%) saturate(72%);
+}
+
 button,
 input,
 select {
