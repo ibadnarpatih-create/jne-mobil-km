@@ -1,0 +1,31 @@
+plugins { id 'com.android.application' }
+def config = new Properties()
+def configFile = rootProject.file('supabase.properties')
+if (configFile.exists()) configFile.withInputStream { config.load(it) }
+def quoted = { String value -> '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"' }
+def backend = config.getProperty('url', '')
+def publicKey = config.getProperty('anonKey', '')
+if (!backend.startsWith('https://') || publicKey.isEmpty()) throw new GradleException('Run scripts/configure-android.ps1 before building.')
+android {
+    namespace 'id.movetra.driver'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'id.movetra.driver.pilot'
+        minSdk 26
+        targetSdk 35
+        versionCode 2
+        versionName '0.2.0-integrated'
+        buildConfigField 'String', 'DRIVER_URL', quoted('https://jne.movetra.id/driver')
+        buildConfigField 'String', 'SUPABASE_URL', quoted(backend)
+        buildConfigField 'String', 'SUPABASE_KEY', quoted(publicKey)
+    }
+    buildFeatures { buildConfig true }
+    signingConfigs { debug { storeFile rootProject.file('../.android-tools/debug.keystore') } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    lint { abortOnError true }
+}
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.core:core:1.15.0'
+    testImplementation 'junit:junit:4.13.2'
+}

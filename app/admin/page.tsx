@@ -50,13 +50,15 @@ import { BulkImportModal } from "@/components/bulk-import-modal";
 import { FuelMasterPanel } from "@/components/fuel/fuel-master-panel";
 import { FuelTransactionsPanel } from "@/components/fuel/fuel-transactions-panel";
 import { FileManagerPanel } from "@/components/file-manager-panel";
+import { TrackingPanel } from "@/components/tracking-panel";
 
 type View =
-  "dashboard" | "logs" | "vehicles" | "drivers" | "export" | "settings"
+  "dashboard" | "tracking" | "logs" | "vehicles" | "drivers" | "export" | "settings"
   | "fuel-types" | "fuel-prices" | "fuel-stations"
   | "fuel-transactions" | "fuel-validation" | "fuel-report" | "file-manager";
 const nav: { id: View; label: string; icon: typeof LayoutDashboard; group?: "BBM" }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "tracking", label: "Tracking", icon: Route },
   { id: "logs", label: "Data Harian Mobil", icon: BarChart3 },
   { id: "vehicles", label: "Data Kendaraan", icon: CarFront },
   { id: "drivers", label: "Data Driver", icon: Users },
@@ -215,6 +217,7 @@ export default function AdminPage() {
           />
         )}
         {view === "logs" && <LogsPanel />}
+        {view === "tracking" && <TrackingPanel />}
         {view === "vehicles" && (
           <VehiclesPanel
             autoAdd={createTarget === "vehicle"}

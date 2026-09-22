@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { createUuid, jakartaNow } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { nativeDriver } from "@/lib/native-driver";
 import { safeUploadName, uploadToImageKit } from "@/lib/imagekit/client";
 import type { User, Vehicle, VehicleLog } from "@/lib/types";
 
@@ -376,11 +377,16 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             email,
             password,
           });
-          if (!error && data.user) return loadRemote(data.user.id);
+          if (!error && data.user) {
+            try { await nativeDriver("login", { identifier: email, password }); }
+            catch (nativeError) { await supabase.auth.signOut(); throw nativeError; }
+            return loadRemote(data.user.id);
+          }
         }
         return null;
       },
       async logout() {
+        await nativeDriver("logout");
         if (supabase) await supabase.auth.signOut();
         setCurrentUser(null);
       },
@@ -420,6 +426,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           .single();
         if (error) throw error;
         const log = { ...mapLog(data), startPhoto: uploaded.url };
+        // KM is already saved: a native GPS failure must not trigger a duplicate trip submission.
+        await nativeDriver("start").catch(() => undefined);
         setLogs((old) => [log, ...old]);
         return log;
       },
@@ -461,6 +469,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           startPhoto: old.startPhoto,
           endPhoto: uploaded.url,
         };
+        await nativeDriver("stop").catch(() => undefined);
         setLogs((items) => items.map((l) => (l.id === logId ? updated : l)));
         setVehicles((items) =>
           items.map((v) => (v.id === old.vehicleId ? { ...v, lastKm: km } : v)),

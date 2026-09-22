@@ -32,6 +32,8 @@ import { formatDate, formatKm, jakartaNow } from "@/lib/utils";
 import type { VehicleLog } from "@/lib/types";
 import { compressImage } from "@/lib/image";
 import { FuelInputScreen, FuelSubmitSuccess } from "@/components/fuel/fuel-input-screen";
+import { DriverTrackingPilot } from "@/components/driver-tracking-pilot";
+import { NativeTrackingStatus } from "@/components/native-tracking-status";
 
 type Screen = "home" | "history" | "start" | "end" | "success" | "fuel" | "fuel-success";
 const validScreens = new Set<Screen>(["home", "history", "start", "end", "success", "fuel", "fuel-success"]);
@@ -148,6 +150,8 @@ export default function DriverPage() {
         </div>
       </header>
 
+      {store.isRemote && activeTrip && <DriverTrackingPilot key={activeTrip.id} logId={activeTrip.id} />}
+      {store.isRemote && activeTrip && <NativeTrackingStatus />}
       {screen === "home" && (
         <HomeScreen
           name={currentUser.name}

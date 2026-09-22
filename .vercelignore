@@ -1,0 +1,6 @@
+.android-tools
+android-driver
+artifacts
+.agents
+.template-previews
+*.log
