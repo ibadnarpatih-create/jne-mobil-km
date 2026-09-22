@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import "leaflet/dist/leaflet.css";
 import { useDemoStore } from "@/lib/demo-store";
 import { createClient } from "@/lib/supabase/client";
 
@@ -13,6 +14,8 @@ export function TrackingPanel() {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(0);
   const [selected, setSelected] = useState("");
+  const mapRef = useRef<HTMLDivElement>(null);
+  const leafletRef = useRef<{ map: import("leaflet").Map; layer: import("leaflet").LayerGroup } | null>(null);
   useEffect(() => {
     const client = createClient();
     let cancelled = false;
@@ -34,6 +37,34 @@ export function TrackingPanel() {
     void refresh();
     return () => { cancelled = true; clearTimeout(timer); };
   }, [store.isRemote]);
+  useEffect(() => {
+    let cancelled = false;
+    async function drawMap() {
+      if (!mapRef.current) return;
+      const L = await import("leaflet");
+      if (cancelled || !mapRef.current) return;
+      if (!leafletRef.current) {
+        const map = L.map(mapRef.current, { zoomControl: true }).setView([-6.2, 106.816666], 10);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors" }).addTo(map);
+        leafletRef.current = { map, layer: L.layerGroup().addTo(map) };
+      }
+      const { map, layer } = leafletRef.current;
+      layer.clearLayers();
+      const bounds: [number, number][] = [];
+      positions.forEach((point) => {
+        const stale = Date.now() - Date.parse(point.recorded_at) > 120000;
+        const finished = point.trip?.jam_akhir != null;
+        const label = `${point.trip?.driver?.nama ?? "Driver"} · ${point.trip?.vehicle?.plat_nomor ?? "Armada"}`;
+        const icon = L.divIcon({ className: "movetra-car-marker", html: `<span>${finished ? "⚪" : stale ? "🟠" : "🚙"}</span><b>${label}</b>`, iconSize: [180, 42], iconAnchor: [14, 18] });
+        L.marker([point.latitude, point.longitude], { icon }).bindPopup(`<strong>${label}</strong><br/>${finished ? "Perjalanan selesai" : stale ? "Pembaruan terlambat" : "Aktif"}<br/>Akurasi ±${Math.round(point.accuracy)} m`).addTo(layer);
+        bounds.push([point.latitude, point.longitude]);
+      });
+      if (bounds.length) map.fitBounds(bounds as import("leaflet").LatLngBoundsExpression, { padding: [30, 30], maxZoom: 13 });
+    }
+    void drawMap();
+    return () => { cancelled = true; };
+  }, [positions]);
+  useEffect(() => () => { leafletRef.current?.map.remove(); leafletRef.current = null; }, []);
   const chosen = positions.find(p => p.log_id === selected);
   return <section className="space-y-5 rounded-3xl bg-slate-950 p-5 text-white sm:p-8">
     <div><p className="text-xs font-bold uppercase tracking-widest text-teal-300">Movetra • Tracking pilot</p><h2 className="mt-2 text-2xl font-extrabold">Posisi driver</h2><p className="mt-2 text-sm text-slate-300">Pembaruan setiap 15 detik. Lokasi lebih dari 2 menit ditandai terlambat.</p></div>
@@ -41,6 +72,7 @@ export function TrackingPanel() {
     {error && <p role="alert" className="rounded-xl bg-amber-950 p-4 text-amber-200">{error}</p>}
     {loading && <p role="status">Memuat posisi…</p>}
     {!loading && !error && positions.length === 0 && store.isRemote && <p className="rounded-xl bg-slate-800 p-6">Belum ada lokasi. Driver dapat mengaktifkan uji GPS saat perjalanan berlangsung.</p>}
+    <div ref={mapRef} className="h-[420px] overflow-hidden rounded-2xl border border-slate-700 bg-slate-800" />
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{positions.map(point => {
       const stale = now - Date.parse(point.recorded_at) > 120000;
       const finished = point.trip?.jam_akhir != null;

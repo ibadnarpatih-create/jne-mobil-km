@@ -21,6 +21,36 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.movetra-car-marker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 800;
+  pointer-events: auto;
+}
+
+.movetra-car-marker span {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border: 2px solid #fff;
+  border-radius: 9999px;
+  background: #14b8a6;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 35%);
+  font-size: 16px;
+}
+
+.movetra-car-marker b {
+  white-space: nowrap;
+  border-radius: 6px;
+  background: #fff;
+  padding: 3px 6px;
+  box-shadow: 0 1px 4px rgb(15 23 42 / 20%);
+}
+
 button,
 input,
 select {
