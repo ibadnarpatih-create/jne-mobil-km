@@ -37,6 +37,7 @@ import {
   UserCheck,
   Users,
   X,
+  PackageSearch,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Badge } from "@/components/ui/badge";
@@ -51,11 +52,12 @@ import { FuelMasterPanel } from "@/components/fuel/fuel-master-panel";
 import { FuelTransactionsPanel } from "@/components/fuel/fuel-transactions-panel";
 import { FileManagerPanel } from "@/components/file-manager-panel";
 import { TrackingPanel } from "@/components/tracking-panel";
+import { ProblemItemsPanel } from "@/components/problem-items-panel";
 
 type View =
   "dashboard" | "tracking" | "logs" | "vehicles" | "drivers" | "export" | "settings"
   | "fuel-types" | "fuel-prices" | "fuel-stations"
-  | "fuel-transactions" | "fuel-validation" | "fuel-report" | "file-manager";
+  | "fuel-transactions" | "fuel-validation" | "fuel-report" | "file-manager" | "problem-items";
 const nav: { id: View; label: string; icon: typeof LayoutDashboard; group?: "BBM" }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "tracking", label: "Tracking", icon: Route },
@@ -69,6 +71,7 @@ const nav: { id: View; label: string; icon: typeof LayoutDashboard; group?: "BBM
   { id: "fuel-prices", label: "Harga BBM", icon: FileSpreadsheet, group: "BBM" },
   { id: "fuel-stations", label: "SPBU / Vendor", icon: Route, group: "BBM" },
   { id: "file-manager", label: "File Manager", icon: FolderOpen },
+  { id: "problem-items", label: "Barang Problem", icon: PackageSearch },
   { id: "export", label: "Export Laporan", icon: Download },
   { id: "settings", label: "Pengaturan Akun", icon: Settings },
 ];
@@ -239,6 +242,7 @@ export default function AdminPage() {
         {view === "fuel-validation" && <FuelTransactionsPanel mode="validation" />}
         {view === "fuel-report" && <FuelTransactionsPanel mode="report" />}
         {view === "file-manager" && <FileManagerPanel />}
+        {view === "problem-items" && <ProblemItemsPanel />}
       </div>
     </main>
   );

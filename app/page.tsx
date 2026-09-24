@@ -26,7 +26,7 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (hydrated && currentUser)
-      router.replace(currentUser.role === "ADMIN" ? "/admin" : "/driver");
+      router.replace(currentUser.role === "ADMIN" ? "/admin" : currentUser.role === "ADMIN_PROBLEM" ? "/problem-admin" : "/driver");
   }, [hydrated, currentUser, router]);
 
   const submit = async (e: React.FormEvent) => {
@@ -39,7 +39,7 @@ export default function LoginPage() {
         setError("ID Login/email atau password belum benar.");
         return;
       }
-      router.push(user.role === "ADMIN" ? "/admin" : "/driver");
+      router.push(user.role === "ADMIN" ? "/admin" : user.role === "ADMIN_PROBLEM" ? "/problem-admin" : "/driver");
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Login belum berhasil.",

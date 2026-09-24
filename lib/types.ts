@@ -1,4 +1,4 @@
-export type Role = "DRIVER" | "ADMIN";
+export type Role = "DRIVER" | "ADMIN" | "ADMIN_PROBLEM";
 export type LogStatus =
   "Belum Selesai" | "Selesai" | "Perlu Diperiksa" | "Dikunci";
 
@@ -40,4 +40,19 @@ export interface VehicleLog {
   endLocation?: string;
   status: LogStatus;
   adminNote?: string;
+}
+
+export type ProblemItemStatus = "DICARI" | "DITEMUKAN" | "SELESAI";
+
+export interface ProblemItem {
+  id: string;
+  photo: string;
+  description: string;
+  receivedAt: string;
+  packagingNotes: string;
+  readableName?: string;
+  readableAddress?: string;
+  status: ProblemItemStatus;
+  createdBy: string;
+  createdAt: string;
 }

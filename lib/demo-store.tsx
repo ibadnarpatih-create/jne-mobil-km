@@ -11,7 +11,7 @@ import { createUuid, jakartaNow } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { nativeDriver } from "@/lib/native-driver";
 import { safeUploadName, uploadToImageKit } from "@/lib/imagekit/client";
-import type { User, Vehicle, VehicleLog } from "@/lib/types";
+import type { ProblemItem, User, Vehicle, VehicleLog } from "@/lib/types";
 
 const seedUsers: User[] = [
   {
@@ -114,11 +114,13 @@ const seedLogs: VehicleLog[] = [
     status: "Dikunci",
   },
 ];
+const seedProblemItems: ProblemItem[] = [];
 
 type Store = {
   users: User[];
   vehicles: Vehicle[];
   logs: VehicleLog[];
+  problemItems: ProblemItem[];
   assetUnitLabels: string[];
   currentUser: User | null;
   hydrated: boolean;
@@ -144,6 +146,9 @@ type Store = {
   saveAssetUnitLabels: (labels: string[]) => Promise<void>;
   resetUserPassword: (userId: string, password: string) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
+  saveProblemItem: (item: Omit<ProblemItem, "id" | "createdBy" | "createdAt" | "photo"> & { photo: string }) => Promise<void>;
+  deleteProblemItem: (id: string) => Promise<void>;
+  updateProblemItem: (id: string, patch: Partial<Pick<ProblemItem, "status" | "description" | "packagingNotes" | "readableName" | "readableAddress" | "receivedAt">>) => Promise<void>;
 };
 const StoreContext = createContext<Store | null>(null);
 
@@ -221,6 +226,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useState(seedUsers);
   const [vehicles, setVehicles] = useState(seedVehicles);
   const [logs, setLogs] = useState(seedLogs);
+  const [problemItems, setProblemItems] = useState<ProblemItem[]>(seedProblemItems);
   const [assetUnitLabels, setAssetUnitLabels] = useState(
     defaultAssetUnitLabels,
   );
@@ -246,7 +252,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Profil pengguna belum dibuat oleh admin.");
     const user = mapUser(profile);
     setCurrentUser(user);
-    const [vehicleResult, logResult, userResult, settingResult] =
+    const [vehicleResult, logResult, userResult, settingResult, problemResult] =
       await Promise.all([
         supabase.from("vehicles").select("*").order("kode_mobil"),
         supabase
@@ -261,6 +267,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           .select("value")
           .eq("key", "asset_unit_labels")
           .maybeSingle(),
+        user.role === "ADMIN" || user.role === "ADMIN_PROBLEM" ? supabase.from("problem_items").select("*").order("created_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
       ]);
     if (vehicleResult.error) throw vehicleResult.error;
     if (logResult.error) throw logResult.error;
@@ -283,6 +290,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         })),
       ),
     );
+    if (!problemResult.error) setProblemItems((problemResult.data ?? []).map((r: Record<string, any>) => ({ id: r.id, photo: r.photo_url, description: r.description, receivedAt: r.received_at, packagingNotes: r.packaging_notes, readableName: r.readable_name ?? undefined, readableAddress: r.readable_address ?? undefined, status: r.status, createdBy: r.created_by, createdAt: r.created_at })));
     return user;
   };
 
@@ -299,6 +307,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             setUsers(data.users ?? seedUsers);
             setVehicles(data.vehicles ?? seedVehicles);
             setLogs(data.logs ?? seedLogs);
+            setProblemItems(data.problemItems ?? seedProblemItems);
             setAssetUnitLabels(data.assetUnitLabels ?? defaultAssetUnitLabels);
             setCurrentUser(data.currentUser ?? null);
           }
@@ -315,9 +324,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     if (hydrated && !supabase)
       localStorage.setItem(
         "jne-mobile-km",
-        JSON.stringify({ users, vehicles, logs, assetUnitLabels, currentUser }),
+        JSON.stringify({ users, vehicles, logs, problemItems, assetUnitLabels, currentUser }),
       );
-  }, [users, vehicles, logs, assetUnitLabels, currentUser, hydrated, supabase]);
+  }, [users, vehicles, logs, problemItems, assetUnitLabels, currentUser, hydrated, supabase]);
 
   const uploadPhoto = async (
     photo: string,
@@ -342,6 +351,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       users,
       vehicles,
       logs,
+      problemItems,
       assetUnitLabels,
       currentUser,
       hydrated,
@@ -534,6 +544,30 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             .eq("id", id);
           if (error) throw error;
         }
+      },
+      async saveProblemItem(item) {
+        if (!currentUser) throw new Error("Sesi login tidak ditemukan.");
+        const now = new Date().toISOString();
+        let photo = item.photo;
+        if (supabase && item.photo) {
+          const result = await uploadToImageKit({ file: item.photo, fileName: safeUploadName(`problem-${Date.now()}.jpg`), folder: `/movetra/problem-items/${currentUser.id}`, tags: ["movetra", "problem-item"] });
+          photo = result.url ?? item.photo;
+        }
+        const created: ProblemItem = { ...item, id: createUuid(), photo, createdBy: currentUser.id, createdAt: now };
+        if (supabase) {
+          const { data, error } = await supabase.from("problem_items").insert({ photo_url: photo, description: item.description, received_at: item.receivedAt, packaging_notes: item.packagingNotes, readable_name: item.readableName || null, readable_address: item.readableAddress || null }).select().single();
+          if (error) throw error;
+          created.id = data.id; created.createdAt = data.created_at; created.createdBy = data.created_by;
+        }
+        setProblemItems((old) => [created, ...old]);
+      },
+      async deleteProblemItem(id) {
+        if (supabase) { const { error } = await supabase.from("problem_items").delete().eq("id", id); if (error) throw error; }
+        setProblemItems((old) => old.filter((item) => item.id !== id));
+      },
+      async updateProblemItem(id, patch) {
+        if (supabase) { const { error } = await supabase.from("problem_items").update({ status: patch.status, description: patch.description, packaging_notes: patch.packagingNotes, readable_name: patch.readableName || null, readable_address: patch.readableAddress || null, received_at: patch.receivedAt }).eq("id", id); if (error) throw error; }
+        setProblemItems((old) => old.map((item) => item.id === id ? { ...item, ...patch } : item));
       },
       async saveVehicle(vehicle) {
         if (supabase) {
