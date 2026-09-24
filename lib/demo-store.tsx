@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { nativeDriver } from "@/lib/native-driver";
 import { safeUploadName, uploadToImageKit } from "@/lib/imagekit/client";
 import { photoPreviewUrl } from "@/lib/photo-url";
+import { uploadFallbackPhoto } from "@/lib/fallback-photo";
 import type { ProblemItem, User, Vehicle, VehicleLog } from "@/lib/types";
 
 const seedUsers: User[] = [
@@ -550,13 +551,16 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         if (!currentUser) throw new Error("Sesi login tidak ditemukan.");
         const now = new Date().toISOString();
         let photo = item.photo;
+        let fallbackPhoto: string | null = null;
+        const itemId = createUuid();
         if (supabase && item.photo) {
           const result = await uploadToImageKit({ file: item.photo, fileName: safeUploadName(`problem-${Date.now()}.jpg`), folder: `/movetra/problem-items/${currentUser.id}`, tags: ["movetra", "problem-item"] });
           photo = result.url ?? item.photo;
+          fallbackPhoto = await uploadFallbackPhoto(supabase, item.photo, "dashboard-photos", `${currentUser.id}/problem-items/${itemId}.jpg`);
         }
-        const created: ProblemItem = { ...item, id: createUuid(), photo, createdBy: currentUser.id, createdAt: now };
+        const created: ProblemItem = { ...item, id: itemId, photo, createdBy: currentUser.id, createdAt: now };
         if (supabase) {
-          const { data, error } = await supabase.from("problem_items").insert({ created_by: currentUser.id, category: item.category ?? "Lainnya", problem_notes: item.problemNotes?.trim() || null, photo_url: photo, description: item.description.trim(), received_at: item.receivedAt, packaging_notes: item.packagingNotes, readable_name: item.readableName || null, readable_address: item.readableAddress || null }).select().single();
+          const { data, error } = await supabase.from("problem_items").insert({ created_by: currentUser.id, category: item.category ?? "Lainnya", problem_notes: item.problemNotes?.trim() || null, photo_url: photo, fallback_photo_url: fallbackPhoto, description: item.description.trim(), received_at: item.receivedAt, packaging_notes: item.packagingNotes, readable_name: item.readableName || null, readable_address: item.readableAddress || null }).select().single();
           if (error) throw error;
           created.id = data.id; created.createdAt = data.created_at; created.createdBy = data.created_by;
         }
