@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { photoPreviewUrl } from "@/lib/photo-url";
 
 const DEMO_KEY = "movetra-fuel-transactions-v1";
 export type FuelTransactionStatus = "DRAFT" | "SUBMITTED" | "VERIFIED" | "NEED_REVIEW" | "REJECTED";
@@ -26,8 +27,8 @@ const mapRemote = (row: TransactionRow): FuelTransactionRecord => ({
   totalDistance: Number(row.total_distance), fuelStationId: row.fuel_station_id ? String(row.fuel_station_id) : undefined,
   fuelStationName: row.fuel_station_name ? String(row.fuel_station_name) : undefined,
   latitude: row.latitude == null ? undefined : Number(row.latitude), longitude: row.longitude == null ? undefined : Number(row.longitude),
-  kmBeforePhoto: String(row.km_before_photo_url ?? ""), kmAfterPhoto: String(row.km_after_photo_url ?? ""),
-  dispenserPhoto: String(row.dispenser_photo_url ?? ""), receiptPhoto: String(row.receipt_photo_url ?? ""),
+  kmBeforePhoto: photoPreviewUrl(String(row.km_before_photo_url ?? "")), kmAfterPhoto: photoPreviewUrl(String(row.km_after_photo_url ?? "")),
+  dispenserPhoto: photoPreviewUrl(String(row.dispenser_photo_url ?? "")), receiptPhoto: photoPreviewUrl(String(row.receipt_photo_url ?? "")),
   notes: row.notes ? String(row.notes) : undefined, status: row.status as FuelTransactionStatus,
   rejectionReason: row.rejection_reason ? String(row.rejection_reason) : undefined,
   verifiedAt: row.verified_at ? String(row.verified_at) : undefined,

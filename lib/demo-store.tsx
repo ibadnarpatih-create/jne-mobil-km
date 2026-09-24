@@ -11,6 +11,7 @@ import { createUuid, jakartaNow } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { nativeDriver } from "@/lib/native-driver";
 import { safeUploadName, uploadToImageKit } from "@/lib/imagekit/client";
+import { photoPreviewUrl } from "@/lib/photo-url";
 import type { ProblemItem, User, Vehicle, VehicleLog } from "@/lib/types";
 
 const seedUsers: User[] = [
@@ -235,11 +236,11 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
 
   const signedPhoto = async (path?: string) => {
     if (!supabase || !path || path === "demo" || path.startsWith("http"))
-      return path;
+      return photoPreviewUrl(path ?? "");
     const { data } = await supabase.storage
       .from("dashboard-photos")
       .createSignedUrl(path, 3600);
-    return data?.signedUrl ?? path;
+    return photoPreviewUrl(data?.signedUrl ?? path);
   };
   const loadRemote = async (userId: string) => {
     if (!supabase) return null;
@@ -290,7 +291,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         })),
       ),
     );
-    if (!problemResult.error) setProblemItems((problemResult.data ?? []).map((r: Record<string, any>) => ({ id: r.id, photo: r.photo_url, description: r.description, receivedAt: r.received_at, packagingNotes: r.packaging_notes, readableName: r.readable_name ?? undefined, readableAddress: r.readable_address ?? undefined, status: r.status, createdBy: r.created_by, createdAt: r.created_at })));
+    if (!problemResult.error) setProblemItems((problemResult.data ?? []).map((r: Record<string, any>) => ({ id: r.id, photo: photoPreviewUrl(r.photo_url), description: r.description, receivedAt: r.received_at, packagingNotes: r.packaging_notes, category: r.category ?? undefined, problemNotes: r.problem_notes ?? undefined, readableName: r.readable_name ?? undefined, readableAddress: r.readable_address ?? undefined, status: r.status, createdBy: r.created_by, createdAt: r.created_at })));
     return user;
   };
 
@@ -555,7 +556,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         }
         const created: ProblemItem = { ...item, id: createUuid(), photo, createdBy: currentUser.id, createdAt: now };
         if (supabase) {
-          const { data, error } = await supabase.from("problem_items").insert({ photo_url: photo, description: item.description, received_at: item.receivedAt, packaging_notes: item.packagingNotes, readable_name: item.readableName || null, readable_address: item.readableAddress || null }).select().single();
+          const { data, error } = await supabase.from("problem_items").insert({ created_by: currentUser.id, category: item.category ?? "Lainnya", problem_notes: item.problemNotes?.trim() || null, photo_url: photo, description: item.description.trim(), received_at: item.receivedAt, packaging_notes: item.packagingNotes, readable_name: item.readableName || null, readable_address: item.readableAddress || null }).select().single();
           if (error) throw error;
           created.id = data.id; created.createdAt = data.created_at; created.createdBy = data.created_by;
         }
@@ -566,7 +567,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         setProblemItems((old) => old.filter((item) => item.id !== id));
       },
       async updateProblemItem(id, patch) {
-        if (supabase) { const { error } = await supabase.from("problem_items").update({ status: patch.status, description: patch.description, packaging_notes: patch.packagingNotes, readable_name: patch.readableName || null, readable_address: patch.readableAddress || null, received_at: patch.receivedAt }).eq("id", id); if (error) throw error; }
+        if (supabase) { const { error } = await supabase.from("problem_items").update({ status: patch.status, description: patch.description, packaging_notes: patch.packagingNotes, readable_name: patch.readableName === undefined ? undefined : patch.readableName || null, readable_address: patch.readableAddress === undefined ? undefined : patch.readableAddress || null, received_at: patch.receivedAt }).eq("id", id); if (error) throw error; }
         setProblemItems((old) => old.map((item) => item.id === id ? { ...item, ...patch } : item));
       },
       async saveVehicle(vehicle) {
@@ -733,7 +734,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       },
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }),
-    [users, vehicles, logs, currentUser, hydrated, isRemote, supabase],
+    [users, vehicles, logs, problemItems, currentUser, hydrated, isRemote, supabase],
   );
   return (
     <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
