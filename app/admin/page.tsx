@@ -478,22 +478,28 @@ function Dashboard({
           {vehicleWorkload.length ? <div className="divide-y divide-slate-100">{vehicleWorkload.slice(0, 5).map((item, index) => <div key={item.vehicle.id} className="flex items-center gap-3 py-3"><span className={`grid h-8 w-8 place-items-center rounded-lg text-sm font-extrabold ${index === 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{item.vehicle.plate} · {item.vehicle.code}</p><p className="text-xs text-slate-500">{item.trips} perjalanan</p></div><p className="font-extrabold text-slate-900">{formatKm(item.distance)} KM</p></div>)}</div> : <Empty text="Belum ada data beban aset hari ini." />}
         </CardContent>
       </Card>
-      <FuelAssetInsights vehicles={vehicles} logs={logs} />
+      <FuelAssetInsights vehicles={vehicles} />
     </div>
   );
 }
 
-function FuelAssetInsights({ vehicles, logs }: { vehicles: ReturnType<typeof useDemoStore>["vehicles"]; logs: VehicleLog[] }) {
+function FuelAssetInsights({ vehicles }: { vehicles: ReturnType<typeof useDemoStore>["vehicles"] }) {
   const [items, setItems] = useState<FuelTransactionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => { let active = true; loadFuelTransactions().then((data) => { if (active) setItems(data); }).catch(() => undefined).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, []);
   const summary = vehicles.map((vehicle) => {
-    const rows = items.filter((item) => item.vehicleId === vehicle.id);
-    const distance = logs.filter((log) => log.vehicleId === vehicle.id).reduce((sum, log) => sum + (log.distance ?? 0), 0);
-    const liters = rows.reduce((sum, row) => sum + row.estimatedLiters, 0);
-    return { vehicle, liters, distance, efficiency: liters ? distance / liters : 0, cost: rows.reduce((sum, row) => sum + row.realPayment, 0), count: rows.length };
+    const rows = items.filter((item) => item.vehicleId === vehicle.id && item.status !== "REJECTED");
+    const fullRows = rows.filter((row) => row.fillingType === "FULL" && row.totalDistance > 0 && row.estimatedLiters > 0);
+    const distance = fullRows.reduce((sum, row) => sum + row.totalDistance, 0);
+    const liters = fullRows.reduce((sum, row) => sum + row.estimatedLiters, 0);
+    return { vehicle, liters, distance, efficiency: liters ? distance / liters : 0, cost: rows.reduce((sum, row) => sum + row.realPayment, 0), count: rows.length, validCount: fullRows.length };
   }).filter((item) => item.count > 0).sort((a, b) => b.cost - a.cost).slice(0, 5);
-  return <Card className="overflow-hidden border-0 shadow-soft"><CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4"><div><h3 className="font-extrabold text-slate-900">Efisiensi dan beban BBM aset</h3><p className="text-sm text-slate-500">Standar evaluasi awal: 8 KM/L</p></div><Fuel className="h-5 w-5 text-orange-500" /></CardHeader><CardContent className="pt-2">{loading ? <p className="py-5 text-sm text-slate-500">Memuat insight BBM...</p> : summary.length ? <div className="divide-y divide-slate-100">{summary.map((item, index) => { const attention = item.efficiency > 0 && item.efficiency < 8; return <div key={item.vehicle.id} className="flex items-center gap-3 py-3"><span className="grid h-8 w-8 place-items-center rounded-lg bg-orange-50 text-sm font-extrabold text-orange-700">{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{item.vehicle.plate} · {item.vehicle.code}</p><p className="text-xs text-slate-500">{item.distance.toLocaleString("id-ID")} KM · {item.liters.toLocaleString("id-ID", { maximumFractionDigits: 1 })} L · {item.count} transaksi</p></div><div className="text-right"><p className={`font-extrabold ${attention ? "text-red-700" : "text-emerald-700"}`}>{item.efficiency ? `${item.efficiency.toFixed(1)} KM/L` : "—"}</p><p className="text-[11px] text-slate-400">{attention ? "Perlu perhatian" : `Rp ${item.cost.toLocaleString("id-ID")}`}</p></div></div>; })}</div> : <Empty text="Belum ada data transaksi BBM." />}</CardContent></Card>;
+  const maxCost = Math.max(...summary.map((item) => item.cost), 1);
+  return <Card className="overflow-hidden border-0 shadow-soft"><CardHeader className="flex flex-row items-start justify-between border-b border-slate-100 pb-4"><div><h3 className="font-extrabold text-slate-900">Efisiensi dan beban BBM aset</h3><p className="text-sm text-slate-500">Perhitungan valid: total KM transaksi BBM ÷ liter pengisian FULL</p></div><Fuel className="h-5 w-5 shrink-0 text-orange-500" /></CardHeader><CardContent className="pt-4">{loading ? <p className="py-5 text-sm text-slate-500">Memuat insight BBM...</p> : summary.length ? <div className="space-y-4"><div className="grid gap-3 sm:grid-cols-3"><InsightKpi label="Aset dianalisis" value={String(summary.length)} /><InsightKpi label="Transaksi non-rejected" value={String(summary.reduce((sum, item) => sum + item.count, 0))} /><InsightKpi label="Basis hitung valid" value={`${summary.reduce((sum, item) => sum + item.validCount, 0)} isi FULL`} /></div><div className="divide-y divide-slate-100">{summary.map((item, index) => { const attention = item.validCount > 0 && item.efficiency < 8; return <div key={item.vehicle.id} className="py-3"><div className="flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-lg bg-orange-50 text-sm font-extrabold text-orange-700">{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{item.vehicle.plate} · {item.vehicle.code}</p><p className="text-xs text-slate-500">{item.distance.toLocaleString("id-ID")} KM · {item.liters.toLocaleString("id-ID", { maximumFractionDigits: 1 })} L · {item.count} transaksi</p></div><div className="text-right"><p className={`font-extrabold ${attention ? "text-red-700" : "text-emerald-700"}`}>{item.validCount ? `${item.efficiency.toFixed(1)} KM/L` : "Belum cukup data"}</p><p className="text-[11px] text-slate-400">{attention ? "Perlu perhatian" : `Rp ${item.cost.toLocaleString("id-ID")}`}</p></div></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${attention ? "bg-red-400" : "bg-emerald-400"}`} style={{ width: `${Math.min(100, (item.cost / maxCost) * 100)}%` }} /></div></div>; })}</div><p className="text-xs text-slate-400">Transaksi PARTIAL tidak dimasukkan ke rumus KM/L agar hasil tidak menyesatkan. Grafik batang menunjukkan beban biaya relatif antar aset.</p></div> : <Empty text="Belum ada data transaksi BBM." />}</CardContent></Card>;
+}
+
+function InsightKpi({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-xl bg-slate-50 px-3 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p><p className="mt-1 text-lg font-extrabold text-slate-900">{value}</p></div>;
 }
 
 function AlertCard({

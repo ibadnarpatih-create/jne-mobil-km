@@ -10,6 +10,7 @@ export type FuelTransactionRecord = {
   fuelTypeId: string; pricePerLiter: number; estimatedLiters: number;
   estimatedAmount: number; realPayment: number; paymentDifference: number;
   totalDistance: number; fuelStationId?: string; fuelStationName?: string;
+  fillingType: "FULL" | "PARTIAL";
   latitude?: number; longitude?: number; kmBeforePhoto: string;
   kmAfterPhoto: string; dispenserPhoto: string; receiptPhoto: string;
   notes?: string; status: FuelTransactionStatus; rejectionReason?: string;
@@ -25,6 +26,7 @@ const mapRemote = (row: TransactionRow): FuelTransactionRecord => ({
   estimatedLiters: Number(row.estimated_liters ?? 0), estimatedAmount: Number(row.estimated_amount),
   realPayment: Number(row.real_payment), paymentDifference: Number(row.estimated_amount) - Number(row.real_payment),
   totalDistance: Number(row.total_distance), fuelStationId: row.fuel_station_id ? String(row.fuel_station_id) : undefined,
+  fillingType: row.filling_type === "PARTIAL" ? "PARTIAL" : "FULL",
   fuelStationName: row.fuel_station_name ? String(row.fuel_station_name) : undefined,
   latitude: row.latitude == null ? undefined : Number(row.latitude), longitude: row.longitude == null ? undefined : Number(row.longitude),
   kmBeforePhoto: photoPreviewUrl(String(row.km_before_photo_url ?? "")), kmAfterPhoto: photoPreviewUrl(String(row.km_after_photo_url ?? "")),
@@ -40,6 +42,7 @@ const mapDemo = (row: TransactionRow): FuelTransactionRecord => ({
   fuelTypeId: String(row.fuelTypeId), pricePerLiter: Number(row.pricePerLiter ?? 0), estimatedLiters: Number(row.estimatedLiters ?? 0),
   estimatedAmount: Number(row.estimatedAmount ?? 0), realPayment: Number(row.realPayment), paymentDifference: Number(row.estimatedAmount ?? 0) - Number(row.realPayment),
   totalDistance: Number(row.totalDistance ?? 0), fuelStationId: row.fuelStationId ? String(row.fuelStationId) : undefined,
+  fillingType: row.fillingType === "PARTIAL" ? "PARTIAL" : "FULL",
   fuelStationName: row.fuelStationName ? String(row.fuelStationName) : undefined,
   latitude: row.latitude == null ? undefined : Number(row.latitude), longitude: row.longitude == null ? undefined : Number(row.longitude),
   kmBeforePhoto: String(row.kmBeforePhoto ?? ""), kmAfterPhoto: String(row.kmAfterPhoto ?? ""), dispenserPhoto: String(row.dispenserPhoto ?? ""), receiptPhoto: String(row.receiptPhoto ?? ""),
