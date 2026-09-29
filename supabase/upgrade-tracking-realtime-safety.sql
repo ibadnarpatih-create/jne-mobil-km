@@ -59,14 +59,9 @@ begin
   returning * into result;
   if result.id is null then raise exception 'Perjalanan tidak ditemukan atau sudah dikunci'; end if;
   update public.vehicles set km_terakhir = p_km_akhir, updated_at = now() where id = result.vehicle_id;
-  delete from public.tracking_latest where log_id = p_log_id;
+  -- Titik terakhir dipertahankan agar armada selesai tetap terlihat di peta admin.
   return result;
 end $$;
-
--- Bersihkan titik terakhir yang tertinggal dari perjalanan yang sudah selesai.
-delete from public.tracking_latest latest
-using public.vehicle_logs trip
-where trip.id = latest.log_id and trip.jam_akhir is not null;
 
 revoke all on function public.record_tracking_point(uuid, uuid, double precision, double precision, double precision, timestamptz) from public, anon;
 grant execute on function public.record_tracking_point(uuid, uuid, double precision, double precision, double precision, timestamptz) to authenticated;

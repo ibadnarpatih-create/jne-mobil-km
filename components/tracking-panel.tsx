@@ -35,9 +35,9 @@ export function TrackingPanel() {
         const { data, error } = await client.from("tracking_latest").select("log_id,latitude,longitude,accuracy,recorded_at,trip:vehicle_logs(jam_akhir,driver:users(nama),vehicle:vehicles(plat_nomor))").order("recorded_at", { ascending: false }).limit(200);
         if (cancelled) return;
         if (error) throw error;
-        // Perjalanan yang sudah selesai tidak boleh tampil sebagai kendaraan aktif,
-        // termasuk saat titik terakhir lama masih tersimpan di database.
-        setPositions(((data ?? []) as unknown as Position[]).filter((point) => !point.trip?.jam_akhir));
+        // Titik selesai tetap ditampilkan agar admin dapat melihat seluruh armada;
+        // statusnya ditandai sebagai Selesai oleh getStatus().
+        setPositions((data ?? []) as unknown as Position[]);
         setError("");
       } catch { if (!cancelled) setError("Posisi belum berhasil dimuat. Periksa koneksi dan migrasi tracking."); }
       finally { if (!cancelled) { setLoading(false); setNow(Date.now()); timer = setTimeout(refresh, 15000); } }
