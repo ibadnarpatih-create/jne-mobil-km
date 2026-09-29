@@ -206,9 +206,6 @@ export default function AdminPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" /> Sistem aktif
-        </div>
       </header>
       <div className="p-3 sm:p-7">
         {view === "dashboard" && (
