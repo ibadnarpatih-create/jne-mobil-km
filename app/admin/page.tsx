@@ -120,6 +120,7 @@ export default function AdminPage() {
         Menyiapkan dashboard…
       </div>
     );
+  const trackingMode = view === "tracking";
   const choose = (id: View) => {
     if (id !== view) {
       const url = new URL(window.location.href);
@@ -136,7 +137,7 @@ export default function AdminPage() {
     setMenu(false);
   };
   return (
-    <main className="admin-mobile-safe min-h-dvh bg-jne-pale lg:pl-72">
+    <main className={`admin-mobile-safe min-h-dvh bg-jne-pale ${trackingMode ? "" : "lg:pl-72"}`}>
       {menu && (
         <button
           aria-label="Tutup menu"
@@ -145,7 +146,7 @@ export default function AdminPage() {
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white lg:visible lg:translate-x-0 ${menu ? "visible translate-x-0" : "invisible -translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white ${trackingMode ? "hidden" : "lg:visible lg:translate-x-0"} ${menu ? "visible translate-x-0" : "invisible -translate-x-full"}`}
       >
         <div className="border-b border-slate-100 p-5">
           <Brand />
@@ -190,7 +191,7 @@ export default function AdminPage() {
           </Button>
         </div>
       </aside>
-      <header className="relative z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:sticky sm:top-0 sm:bg-white/95 sm:px-7 sm:backdrop-blur">
+      <header className={`relative z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:sticky sm:top-0 sm:bg-white/95 sm:px-7 sm:backdrop-blur ${trackingMode ? "bg-slate-950 text-white" : ""}`}>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMenu(true)}
@@ -199,7 +200,7 @@ export default function AdminPage() {
             <Menu />
           </button>
           <div>
-            <h1 className="font-extrabold text-slate-900">
+            <h1 className={`font-extrabold ${trackingMode ? "text-white" : "text-slate-900"}`}>
               {nav.find((n) => n.id === view)?.label}
             </h1>
             <p className="hidden text-xs text-slate-500 sm:block">
@@ -211,7 +212,7 @@ export default function AdminPage() {
           <UserRound className="h-5 w-5" />
         </button>
       </header>
-      <div className="p-3 sm:p-7">
+      <div className={trackingMode ? "p-0" : "p-3 sm:p-7"}>
         {view === "dashboard" && (
           <Dashboard
             onNavigate={choose}
