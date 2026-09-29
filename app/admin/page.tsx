@@ -53,6 +53,7 @@ import { FuelTransactionsPanel } from "@/components/fuel/fuel-transactions-panel
 import { FileManagerPanel } from "@/components/file-manager-panel";
 import { TrackingPanel } from "@/components/tracking-panel";
 import { AssetTripsPanel } from "@/components/asset-trips-panel";
+import { loadFuelTransactions, type FuelTransactionRecord } from "@/lib/fuel/admin";
 
 type View =
   "dashboard" | "tracking" | "logs" | "vehicles" | "drivers" | "export" | "settings"
@@ -262,6 +263,10 @@ function Dashboard({
   const unfinished = todayLogs.filter((l) => l.status === "Belum Selesai");
   const reviewed = todayLogs.filter((l) => l.status === "Perlu Diperiksa");
   const total = todayLogs.reduce((sum, l) => sum + (l.distance ?? 0), 0);
+  const vehicleWorkload = vehicles.map((vehicle) => {
+    const items = todayLogs.filter((log) => log.vehicleId === vehicle.id);
+    return { vehicle, trips: items.length, distance: items.reduce((sum, log) => sum + (log.distance ?? 0), 0) };
+  }).filter((item) => item.trips > 0).sort((a, b) => b.distance - a.distance);
   const completed = todayLogs.filter((l) => l.endKm != null).length;
   const completion = todayLogs.length
     ? Math.round((completed / todayLogs.length) * 100)
@@ -461,8 +466,34 @@ function Dashboard({
           />
         </div>
       </div>
+      <Card className="overflow-hidden border-0 shadow-soft">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4">
+          <div>
+            <h3 className="font-extrabold text-slate-900">Beban kerja aset</h3>
+            <p className="text-sm text-slate-500">Ranking kendaraan berdasarkan total KM hari ini</p>
+          </div>
+          <Gauge className="h-5 w-5 text-jne-blue" />
+        </CardHeader>
+        <CardContent className="pt-2">
+          {vehicleWorkload.length ? <div className="divide-y divide-slate-100">{vehicleWorkload.slice(0, 5).map((item, index) => <div key={item.vehicle.id} className="flex items-center gap-3 py-3"><span className={`grid h-8 w-8 place-items-center rounded-lg text-sm font-extrabold ${index === 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{item.vehicle.plate} · {item.vehicle.code}</p><p className="text-xs text-slate-500">{item.trips} perjalanan</p></div><p className="font-extrabold text-slate-900">{formatKm(item.distance)} KM</p></div>)}</div> : <Empty text="Belum ada data beban aset hari ini." />}
+        </CardContent>
+      </Card>
+      <FuelAssetInsights vehicles={vehicles} logs={logs} />
     </div>
   );
+}
+
+function FuelAssetInsights({ vehicles, logs }: { vehicles: ReturnType<typeof useDemoStore>["vehicles"]; logs: VehicleLog[] }) {
+  const [items, setItems] = useState<FuelTransactionRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { let active = true; loadFuelTransactions().then((data) => { if (active) setItems(data); }).catch(() => undefined).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, []);
+  const summary = vehicles.map((vehicle) => {
+    const rows = items.filter((item) => item.vehicleId === vehicle.id);
+    const distance = logs.filter((log) => log.vehicleId === vehicle.id).reduce((sum, log) => sum + (log.distance ?? 0), 0);
+    const liters = rows.reduce((sum, row) => sum + row.estimatedLiters, 0);
+    return { vehicle, liters, distance, efficiency: liters ? distance / liters : 0, cost: rows.reduce((sum, row) => sum + row.realPayment, 0), count: rows.length };
+  }).filter((item) => item.count > 0).sort((a, b) => b.cost - a.cost).slice(0, 5);
+  return <Card className="overflow-hidden border-0 shadow-soft"><CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4"><div><h3 className="font-extrabold text-slate-900">Efisiensi dan beban BBM aset</h3><p className="text-sm text-slate-500">Standar evaluasi awal: 8 KM/L</p></div><Fuel className="h-5 w-5 text-orange-500" /></CardHeader><CardContent className="pt-2">{loading ? <p className="py-5 text-sm text-slate-500">Memuat insight BBM...</p> : summary.length ? <div className="divide-y divide-slate-100">{summary.map((item, index) => { const attention = item.efficiency > 0 && item.efficiency < 8; return <div key={item.vehicle.id} className="flex items-center gap-3 py-3"><span className="grid h-8 w-8 place-items-center rounded-lg bg-orange-50 text-sm font-extrabold text-orange-700">{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{item.vehicle.plate} · {item.vehicle.code}</p><p className="text-xs text-slate-500">{item.distance.toLocaleString("id-ID")} KM · {item.liters.toLocaleString("id-ID", { maximumFractionDigits: 1 })} L · {item.count} transaksi</p></div><div className="text-right"><p className={`font-extrabold ${attention ? "text-red-700" : "text-emerald-700"}`}>{item.efficiency ? `${item.efficiency.toFixed(1)} KM/L` : "—"}</p><p className="text-[11px] text-slate-400">{attention ? "Perlu perhatian" : `Rp ${item.cost.toLocaleString("id-ID")}`}</p></div></div>; })}</div> : <Empty text="Belum ada data transaksi BBM." />}</CardContent></Card>;
 }
 
 function AlertCard({
