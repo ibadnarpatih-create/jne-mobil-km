@@ -41,3 +41,48 @@ export interface VehicleLog {
   status: LogStatus;
   adminNote?: string;
 }
+
+export type AssetInspectionStatus = "OK" | "TIDAK ADA";
+
+export interface AssetTripShipment {
+  suratJalan: string;
+  qty?: number;
+  weightKg?: number;
+}
+
+export interface AssetTripDestination {
+  startPoint: string;
+  startKm?: number;
+  destination: string;
+  endKm?: number;
+  departDate?: string;
+  departTime?: string;
+  arriveDate?: string;
+  arriveTime?: string;
+}
+
+export interface AssetTripInspection {
+  stnk: AssetInspectionStatus;
+  kir: AssetInspectionStatus;
+  body: AssetInspectionStatus;
+  roda: AssetInspectionStatus;
+  banSerep: AssetInspectionStatus;
+  lampuBox: AssetInspectionStatus;
+  kancingBox: AssetInspectionStatus;
+  dongkrak: AssetInspectionStatus;
+  kunciRoda: AssetInspectionStatus;
+  lainLain: AssetInspectionStatus;
+}
+
+export interface AssetTrip {
+  id: string;
+  driverName: string;
+  driverNik: string;
+  vehiclePlate: string;
+  vehicleName: string;
+  shipments: AssetTripShipment[];
+  destinations: AssetTripDestination[];
+  inspection: AssetTripInspection;
+  createdBy: string;
+  createdAt: string;
+}

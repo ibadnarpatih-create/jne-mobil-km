@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { nativeDriver } from "@/lib/native-driver";
 import { safeUploadName, uploadToImageKit } from "@/lib/imagekit/client";
 import { photoPreviewUrl } from "@/lib/photo-url";
-import type { User, Vehicle, VehicleLog } from "@/lib/types";
+import type { AssetTrip, User, Vehicle, VehicleLog } from "@/lib/types";
 
 const seedUsers: User[] = [
   {
@@ -119,6 +119,7 @@ type Store = {
   users: User[];
   vehicles: Vehicle[];
   logs: VehicleLog[];
+  assetTrips: AssetTrip[];
   assetUnitLabels: string[];
   currentUser: User | null;
   hydrated: boolean;
@@ -144,6 +145,7 @@ type Store = {
   saveAssetUnitLabels: (labels: string[]) => Promise<void>;
   resetUserPassword: (userId: string, password: string) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
+  saveAssetTrip: (trip: Omit<AssetTrip, "id" | "createdBy" | "createdAt">) => Promise<void>;
 };
 const StoreContext = createContext<Store | null>(null);
 
@@ -221,6 +223,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useState(seedUsers);
   const [vehicles, setVehicles] = useState(seedVehicles);
   const [logs, setLogs] = useState(seedLogs);
+  const [assetTrips, setAssetTrips] = useState<AssetTrip[]>([]);
   const [assetUnitLabels, setAssetUnitLabels] = useState(
     defaultAssetUnitLabels,
   );
@@ -246,7 +249,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Profil pengguna belum dibuat oleh admin.");
     const user = mapUser(profile);
     setCurrentUser(user);
-    const [vehicleResult, logResult, userResult, settingResult] =
+    const [vehicleResult, logResult, userResult, settingResult, assetTripResult] =
       await Promise.all([
         supabase.from("vehicles").select("*").order("kode_mobil"),
         supabase
@@ -261,6 +264,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           .select("value")
           .eq("key", "asset_unit_labels")
           .maybeSingle(),
+        supabase.from("asset_trips").select("*").order("created_at", { ascending: false }),
       ]);
     if (vehicleResult.error) throw vehicleResult.error;
     if (logResult.error) throw logResult.error;
@@ -273,6 +277,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       );
     setVehicles((vehicleResult.data ?? []).map(mapVehicle));
     setUsers((userResult.data ?? []).map(mapUser));
+    if (!assetTripResult.error) setAssetTrips((assetTripResult.data ?? []).map((row: Record<string, any>) => ({
+      id: row.id, driverName: row.driver_name, driverNik: row.driver_nik,
+      vehiclePlate: row.vehicle_plate, vehicleName: row.vehicle_name,
+      shipments: row.shipments ?? [], destinations: row.destinations ?? [],
+      inspection: row.inspection ?? {}, createdBy: row.created_by, createdAt: row.created_at,
+    })));
     const mapped = (logResult.data ?? []).map(mapLog);
     setLogs(
       await Promise.all(
@@ -299,6 +309,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             setUsers(data.users ?? seedUsers);
             setVehicles(data.vehicles ?? seedVehicles);
             setLogs(data.logs ?? seedLogs);
+            setAssetTrips(data.assetTrips ?? []);
             setAssetUnitLabels(data.assetUnitLabels ?? defaultAssetUnitLabels);
             setCurrentUser(data.currentUser ?? null);
           }
@@ -315,9 +326,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     if (hydrated && !supabase)
       localStorage.setItem(
         "jne-mobile-km",
-        JSON.stringify({ users, vehicles, logs, assetUnitLabels, currentUser }),
+        JSON.stringify({ users, vehicles, logs, assetTrips, assetUnitLabels, currentUser }),
       );
-  }, [users, vehicles, logs, assetUnitLabels, currentUser, hydrated, supabase]);
+  }, [users, vehicles, logs, assetTrips, assetUnitLabels, currentUser, hydrated, supabase]);
 
   const uploadPhoto = async (
     photo: string,
@@ -342,6 +353,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       users,
       vehicles,
       logs,
+      assetTrips,
       assetUnitLabels,
       currentUser,
       hydrated,
@@ -558,6 +570,21 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             : [...items, vehicle],
         );
       },
+      async saveAssetTrip(trip) {
+        if (!currentUser) throw new Error("Sesi login tidak ditemukan.");
+        const created: AssetTrip = { ...trip, id: createUuid(), createdBy: currentUser.id, createdAt: new Date().toISOString() };
+        if (supabase) {
+          const { data, error } = await supabase.from("asset_trips").insert({
+            driver_name: trip.driverName, driver_nik: trip.driverNik,
+            vehicle_plate: trip.vehiclePlate, vehicle_name: trip.vehicleName,
+            shipments: trip.shipments, destinations: trip.destinations,
+            inspection: trip.inspection, created_by: currentUser.id,
+          }).select().single();
+          if (error) throw error;
+          created.id = data.id; created.createdAt = data.created_at; created.createdBy = data.created_by;
+        }
+        setAssetTrips((old) => [created, ...old]);
+      },
       async saveUser(user) {
         if (!supabase) {
           setUsers((items) =>
@@ -699,7 +726,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       },
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }),
-    [users, vehicles, logs, currentUser, hydrated, isRemote, supabase],
+    [users, vehicles, logs, assetTrips, currentUser, hydrated, isRemote, supabase],
   );
   return (
     <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
