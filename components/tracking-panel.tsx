@@ -73,7 +73,8 @@ export function TrackingPanel() {
         const name = point.trip?.driver?.nama ?? "Driver";
         const plate = point.trip?.vehicle?.plat_nomor ?? "Armada";
         const label = `${name} · ${plate}`;
-        const icon = L.divIcon({ className: "movetra-car-marker", html: `<span class="movetra-car-icon">${carSvg(status)}</span><b>${label}</b>`, iconSize: [190, 42], iconAnchor: [18, 22] });
+        const showLabel = status !== "finished";
+        const icon = L.divIcon({ className: `movetra-car-marker ${showLabel ? "" : "movetra-finished-marker"}`, html: `<span class="movetra-car-icon">${carSvg(status)}</span>${showLabel ? `<b>${label}</b>` : ""}`, iconSize: showLabel ? [190, 42] : [32, 32], iconAnchor: showLabel ? [18, 22] : [16, 16] });
         L.marker([point.latitude, point.longitude], { icon }).on("click", () => setSelected(point.log_id)).bindPopup(`<strong>${label}</strong><br/>${statusLabel(status)}<br/>Akurasi ±${Math.round(point.accuracy)} m`).addTo(layer);
         bounds.push([point.latitude, point.longitude]);
       });
