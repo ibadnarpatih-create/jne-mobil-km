@@ -206,6 +206,15 @@ export default function AdminPage() {
             </p>
           </div>
         </div>
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-teal-50 text-xs font-extrabold text-jne-blue">
+            {store.currentUser.name.slice(0, 2).toUpperCase()}
+          </span>
+          <div className="hidden text-right sm:block">
+            <p className="text-sm font-bold leading-tight text-slate-800">{store.currentUser.name}</p>
+            <p className="text-[11px] text-slate-500">Administrator</p>
+          </div>
+        </div>
       </header>
       <div className="p-3 sm:p-7">
         {view === "dashboard" && (
