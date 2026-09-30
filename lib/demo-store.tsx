@@ -320,7 +320,6 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         setHydrated(true);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     if (hydrated && !supabase)
@@ -724,9 +723,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         }
         setUsers((items) => items.filter((item) => item.id !== userId));
       },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }),
-    [users, vehicles, logs, assetTrips, currentUser, hydrated, isRemote, supabase],
+    [users, vehicles, logs, assetTrips, currentUser, hydrated, isRemote, supabase, assetUnitLabels, loadRemote, uploadPhoto],
   );
   return (
     <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

@@ -7,3 +7,13 @@ node_modules
 *.log
 .vercel
 supabase/.temp/
+
+.vercel
+.env*
+.android-tools/
+android-driver/.gradle/
+android-driver/**/build/
+android-driver/local.properties
+android-driver/supabase.properties
+android-driver/*.jks
+artifacts/*.apk

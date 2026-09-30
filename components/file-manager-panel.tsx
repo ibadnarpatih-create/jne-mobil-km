@@ -217,7 +217,6 @@ export function FileManagerPanel() {
             <Card key={file.fileId} className="overflow-hidden">
               <div className="grid aspect-[16/10] place-items-center overflow-hidden bg-slate-100">
                 {file.fileType === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={file.thumbnail || file.thumbnailUrl || file.url} alt={file.name} className="h-full w-full object-cover" />
                 ) : (
                   <File className="h-14 w-14 text-slate-300" />
