@@ -95,9 +95,14 @@ export async function updateFuelTransaction(id: string, values: { odometerAtRefu
   const supabase = createClient();
   if (!supabase) {
     const rows = JSON.parse(localStorage.getItem(DEMO_KEY) ?? "[]") as TransactionRow[];
-    localStorage.setItem(DEMO_KEY, JSON.stringify(rows.map((row) => row.id === id ? { ...row, odometerAtRefuel: values.odometerAtRefuel, realPayment: values.realPayment, paymentDifference: Number(row.estimatedAmount ?? 0) - values.realPayment, notes: values.notes } : row)));
+    localStorage.setItem(DEMO_KEY, JSON.stringify(rows.map((row) => { if (row.id !== id) return row; const distance = Math.max(0, values.odometerAtRefuel - Number(row.previousOdometer ?? values.odometerAtRefuel)); const liters = Math.round((distance / 8) * 100) / 100; const estimatedAmount = Math.round(liters * Number(row.pricePerLiter ?? 0)); return { ...row, odometerAtRefuel: values.odometerAtRefuel, totalDistance: distance, estimatedLiters: liters, estimatedAmount, realPayment: values.realPayment, paymentDifference: estimatedAmount - values.realPayment, notes: values.notes }; })));
     return;
   }
-  const { error } = await supabase.from("fuel_transactions").update({ odometer_at_refuel: values.odometerAtRefuel, real_payment: values.realPayment, notes: values.notes || null, status: "NEED_REVIEW" }).eq("id", id);
+  const { data: current, error: loadError } = await supabase.from("fuel_transactions").select("previous_odometer,price_per_liter").eq("id", id).single();
+  if (loadError) throw loadError;
+  const distance = Math.max(0, values.odometerAtRefuel - Number(current.previous_odometer ?? values.odometerAtRefuel));
+  const estimatedLiters = Math.round((distance / 8) * 100) / 100;
+  const estimatedAmount = Math.round(estimatedLiters * Number(current.price_per_liter ?? 0));
+  const { error } = await supabase.from("fuel_transactions").update({ odometer_at_refuel: values.odometerAtRefuel, total_distance: distance, estimated_liters: estimatedLiters, estimated_amount: estimatedAmount, real_payment: values.realPayment, payment_difference: estimatedAmount - values.realPayment, fuel_efficiency: distance > 0 ? 8 : null, cost_per_km: distance > 0 ? Math.round((estimatedAmount / distance) * 100) / 100 : null, notes: values.notes || null, status: "NEED_REVIEW" }).eq("id", id);
   if (error) throw error;
 }
