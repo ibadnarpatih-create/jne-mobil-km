@@ -57,7 +57,7 @@ export default function DriverPage() {
     () => logs.filter((l) => l.driverId === currentUser?.id),
     [logs, currentUser],
   );
-  const activeTrip = myLogs.find((l) => l.status === "Belum Selesai");
+  const activeTrip = myLogs.find((l) => !l.endTime && l.status !== "Selesai" && l.status !== "Dikunci");
   const todayCompleted = myLogs.find(
     (l) => l.date === today && l.endKm != null,
   );

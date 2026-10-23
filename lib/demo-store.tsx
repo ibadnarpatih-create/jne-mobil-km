@@ -494,6 +494,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           throw new Error("Data yang sudah dikunci tidak dapat direvisi.");
 
         const updated = { ...old, ...patch };
+        // Penutupan administratif tetap melepas unique index perjalanan terbuka.
+        // KM akhir yang belum dilaporkan tetap kosong, bukan diasumsikan nol.
+        if (updated.status === "Selesai" && !updated.endTime) {
+          updated.endTime = jakartaNow().time;
+          updated.adminNote = [updated.adminNote, "Ditutup admin; jam akhir adalah waktu penutupan administratif."].filter(Boolean).join("\n");
+        }
         if (updated.endKm != null && updated.endKm < updated.startKm)
           throw new Error("KM akhir tidak boleh lebih kecil dari KM awal.");
         updated.distance =
@@ -505,6 +511,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             .update({
               km_awal: updated.startKm,
               km_akhir: updated.endKm ?? null,
+              jam_akhir: updated.endTime ?? null,
               status: updated.status,
               catatan_admin: updated.adminNote?.trim() || null,
               updated_at: new Date().toISOString(),
