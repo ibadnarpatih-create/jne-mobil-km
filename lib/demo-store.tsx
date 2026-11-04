@@ -10,9 +10,12 @@ import React, {
 import { createUuid, jakartaNow } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { nativeDriver } from "@/lib/native-driver";
+
 import { safeUploadName, uploadToImageKit } from "@/lib/imagekit/client";
 import { photoPreviewUrl } from "@/lib/photo-url";
 import type { AssetTrip, User, Vehicle, VehicleLog } from "@/lib/types";
+
+const SIGNED_OUT_KEY = "movetra-explicit-sign-out";
 
 const seedUsers: User[] = [
   {
@@ -299,7 +302,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
+        const signedOut = localStorage.getItem(SIGNED_OUT_KEY) === "1";
         if (supabase) {
+          if (signedOut) return;
           const { data } = await supabase.auth.getSession();
           if (data.session) await loadRemote(data.session.user.id);
         } else {
@@ -311,7 +316,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             setLogs(data.logs ?? seedLogs);
             setAssetTrips(data.assetTrips ?? []);
             setAssetUnitLabels(data.assetUnitLabels ?? defaultAssetUnitLabels);
-            setCurrentUser(data.currentUser ?? null);
+            setCurrentUser(signedOut ? null : data.currentUser ?? null);
           }
         }
       } catch (error) {
@@ -374,6 +379,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                   ) &&
                 u.password === password,
             ) ?? null;
+          if (user) localStorage.removeItem(SIGNED_OUT_KEY);
           setCurrentUser(user);
           return user;
         }
@@ -391,15 +397,25 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           if (!error && data.user) {
             try { await nativeDriver("login", { identifier: email, password }); }
             catch (nativeError) { await supabase.auth.signOut(); throw nativeError; }
-            return loadRemote(data.user.id);
+            const user = await loadRemote(data.user.id);
+            if (user) localStorage.removeItem(SIGNED_OUT_KEY);
+            return user;
           }
         }
         return null;
       },
       async logout() {
-        await nativeDriver("logout");
-        if (supabase) await supabase.auth.signOut();
+        localStorage.setItem(SIGNED_OUT_KEY, "1");
         setCurrentUser(null);
+        const results = await Promise.allSettled([
+          nativeDriver("logout"),
+          supabase?.auth.signOut({ scope: "local" }).then(({ error }) => {
+            if (error) throw error;
+          }),
+        ]);
+        for (const result of results) {
+          if (result.status === "rejected") console.warn("Pembersihan sesi logout belum selesai.", result.reason);
+        }
       },
       async startTrip(vehicleId, km, photo, location) {
         if (!currentUser) throw new Error("Sesi login tidak ditemukan.");
