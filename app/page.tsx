@@ -7,8 +7,6 @@ import {
   EyeOff,
   KeyRound,
   LockKeyhole,
-  ShieldCheck,
-  Truck,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -48,16 +46,6 @@ export default function LoginPage() {
       setBusy(false);
     }
   };
-  const fillDemo = (role: "driver" | "admin") => {
-    if (role === "driver") {
-      setIdentifier("TGR250");
-      setPassword("driver123");
-    } else {
-      setIdentifier("admin@jne.co.id");
-      setPassword("admin123");
-    }
-    setError("");
-  };
 
   return (
     <main className="relative min-h-dvh overflow-hidden bg-jne-pale px-5 py-8 sm:grid sm:place-items-center">
@@ -74,7 +62,7 @@ export default function LoginPage() {
                 Selamat datang
               </h1>
               <p className="mt-1 text-sm leading-6 text-slate-500">
-                Masuk untuk mencatat perjalanan atau memeriksa laporan.
+                Masuk dengan ID login atau email akun Anda.
               </p>
             </div>
             <form onSubmit={submit} className="space-y-5">
@@ -87,7 +75,7 @@ export default function LoginPage() {
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     className="pl-12"
-                    placeholder="Contoh: TGR250"
+                    placeholder="Masukkan ID login atau email"
                     autoComplete="username"
                     required
                   />
@@ -133,21 +121,6 @@ export default function LoginPage() {
                 {busy ? "Sedang masuk…" : "Masuk ke Aplikasi"}
               </Button>
             </form>
-            <div className="my-6 flex items-center gap-3">
-              <div className="h-px flex-1 bg-slate-200" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Akun demo
-              </span>
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" onClick={() => fillDemo("driver")}>
-                <Truck className="h-4 w-4" /> Driver
-              </Button>
-              <Button variant="outline" onClick={() => fillDemo("admin")}>
-                <ShieldCheck className="h-4 w-4" /> Admin
-              </Button>
-            </div>
           </CardContent>
         </Card>
         <p className="mt-5 text-center text-xs text-slate-400">
