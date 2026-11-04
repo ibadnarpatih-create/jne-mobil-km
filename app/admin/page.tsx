@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Activity,
   ArrowUpRight,
   BarChart3,
   CalendarDays,
@@ -30,7 +29,6 @@ import {
   Search,
   Settings,
   ShieldCheck,
-  Sparkles,
   Trash2,
   Truck,
   Upload,
@@ -55,27 +53,28 @@ import { FileManagerPanel } from "@/components/file-manager-panel";
 import { TrackingPanel } from "@/components/tracking-panel";
 import { AssetTripsPanel } from "@/components/asset-trips-panel";
 import { loadFuelTransactions, type FuelTransactionRecord } from "@/lib/fuel/admin";
+import { FuelStatusBadge } from "@/components/fuel/fuel-status";
 
 type View =
   "dashboard" | "tracking" | "logs" | "vehicles" | "drivers" | "export" | "settings"
   | "fuel-types" | "fuel-prices" | "fuel-stations"
   | "fuel-transactions" | "fuel-validation" | "fuel-report" | "file-manager" | "asset-trips";
-const nav: { id: View; label: string; icon: typeof LayoutDashboard; group?: "BBM" }[] = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "tracking", label: "Tracking", icon: Route },
-  { id: "logs", label: "Data Harian Mobil", icon: BarChart3 },
-  { id: "vehicles", label: "Data Kendaraan", icon: CarFront },
-  { id: "drivers", label: "Data Driver", icon: Users },
-  { id: "fuel-transactions", label: "Transaksi BBM", icon: Fuel, group: "BBM" },
-  { id: "fuel-validation", label: "Validasi BBM", icon: ShieldCheck, group: "BBM" },
-  { id: "fuel-report", label: "Laporan BBM", icon: FileSpreadsheet, group: "BBM" },
-  { id: "fuel-types", label: "Jenis BBM", icon: Fuel, group: "BBM" },
-  { id: "fuel-prices", label: "Harga BBM", icon: FileSpreadsheet, group: "BBM" },
-  { id: "fuel-stations", label: "SPBU / Vendor", icon: Route, group: "BBM" },
-  { id: "file-manager", label: "File Manager", icon: FolderOpen },
-  { id: "asset-trips", label: "Trip Aset Antar Hub", icon: ClipboardList },
-  { id: "export", label: "Export Laporan", icon: Download },
-  { id: "settings", label: "Pengaturan Akun", icon: Settings },
+const nav: { id: View; label: string; icon: typeof LayoutDashboard; group: string }[] = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Overview" },
+  { id: "tracking", label: "Tracking", icon: Route, group: "Overview" },
+  { id: "logs", label: "Data Harian Mobil", icon: BarChart3, group: "Operasional" },
+  { id: "asset-trips", label: "Trip Aset Antar Hub", icon: ClipboardList, group: "Operasional" },
+  { id: "vehicles", label: "Data Kendaraan", icon: CarFront, group: "Master Data" },
+  { id: "drivers", label: "Data Driver", icon: Users, group: "Master Data" },
+  { id: "fuel-transactions", label: "Transaksi BBM", icon: Fuel, group: "Manajemen BBM" },
+  { id: "fuel-validation", label: "Validasi BBM", icon: ShieldCheck, group: "Manajemen BBM" },
+  { id: "fuel-report", label: "Laporan BBM", icon: FileSpreadsheet, group: "Manajemen BBM" },
+  { id: "fuel-types", label: "Jenis BBM", icon: Fuel, group: "Data Master BBM" },
+  { id: "fuel-prices", label: "Harga BBM", icon: FileSpreadsheet, group: "Data Master BBM" },
+  { id: "fuel-stations", label: "SPBU / Vendor", icon: Route, group: "Data Master BBM" },
+  { id: "file-manager", label: "File Manager", icon: FolderOpen, group: "Sistem" },
+  { id: "export", label: "Export Laporan", icon: Download, group: "Sistem" },
+  { id: "settings", label: "Pengaturan Akun", icon: Settings, group: "Sistem" },
 ];
 
 const validViews = new Set<View>(nav.map((item) => item.id));
@@ -136,7 +135,7 @@ export default function AdminPage() {
     setMenu(false);
   };
   return (
-    <main className="admin-mobile-safe min-h-dvh bg-jne-pale lg:pl-72">
+    <main className="admin-mobile-safe movetra-workspace min-h-dvh bg-admin-canvas lg:pl-60">
       {menu && (
         <button
           aria-label="Tutup menu"
@@ -145,20 +144,22 @@ export default function AdminPage() {
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white lg:visible lg:translate-x-0 ${menu ? "visible translate-x-0" : "invisible -translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-admin-navy text-white lg:visible lg:translate-x-0 ${menu ? "visible translate-x-0" : "invisible -translate-x-full"}`}
       >
-        <div className="border-b border-slate-100 p-5">
-          <Brand />
+        <div className="border-b border-white/20 px-4 py-5">
+          <Brand compact inverse />
+          <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-blue-200">Operasional Armada</p>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
           {nav.map((item, index) => (
             <div key={item.id}>
               {item.group && nav[index - 1]?.group !== item.group && (
-                <p className="mb-2 mt-5 px-4 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{item.group}</p>
+                <p className="mb-1 mt-4 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-300">{item.group}</p>
               )}
               <button
                 onClick={() => choose(item.id)}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${view === item.id ? "bg-jne-blue text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                aria-current={view === item.id ? "page" : undefined}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold transition ${view === item.id ? "bg-admin-primary text-white" : "text-slate-100 hover:bg-white/10"}`}
               >
                 <item.icon className="h-5 w-5" />
                 {item.label}
@@ -166,7 +167,7 @@ export default function AdminPage() {
             </div>
           ))}
         </nav>
-        <div className="border-t border-slate-100 p-4">
+        <div className="border-t border-white/20 p-4">
           <div className="mb-3 flex items-center gap-3 px-2">
             <span className="grid h-10 w-10 place-items-center rounded-full bg-teal-50 font-bold text-jne-blue">
               AO
@@ -175,12 +176,12 @@ export default function AdminPage() {
               <p className="truncate text-sm font-bold">
                 {store.currentUser.name}
               </p>
-              <p className="text-xs text-slate-500">Administrator</p>
+              <p className="text-xs text-slate-300">Administrator</p>
             </div>
           </div>
           <Button
             variant="ghost"
-            className="w-full justify-start"
+            className="w-full justify-start text-white hover:bg-white/10"
             onClick={() => {
               store.logout();
               router.replace("/");
@@ -192,26 +193,24 @@ export default function AdminPage() {
       </aside>
       <header className="relative z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:sticky sm:top-0 sm:bg-white/95 sm:px-7 sm:backdrop-blur">
         <div className="flex items-center gap-3">
-          <button
+          <button aria-label="Buka navigasi" aria-expanded={menu}
             onClick={() => setMenu(true)}
             className="rounded-xl p-2 text-slate-600 lg:hidden"
           >
             <Menu />
           </button>
           <div>
-            <h1 className="font-extrabold text-slate-900">
+            <h1 className="text-sm font-bold text-admin-primary">
+              <span className="font-medium text-slate-500">Workspace / </span>
               {nav.find((n) => n.id === view)?.label}
             </h1>
-            <p className="hidden text-xs text-slate-500 sm:block">
-              Movetra · Move Smarter, Work Better
-            </p>
           </div>
         </div>
-        <button aria-label={`Akun ${store.currentUser.name}`} title={store.currentUser.name} className="grid h-9 w-9 place-items-center rounded-full bg-teal-50 text-jne-blue transition hover:bg-teal-100">
+        <button onClick={() => choose("settings")} aria-label={`Akun ${store.currentUser.name}`} title={store.currentUser.name} className="grid h-9 w-9 place-items-center rounded-full bg-teal-50 text-jne-blue transition hover:bg-teal-100">
           <UserRound className="h-5 w-5" />
         </button>
       </header>
-      <div className="p-3 sm:p-7">
+      <div className="mx-auto max-w-[1800px] p-4 sm:p-8">
         {view === "dashboard" && (
           <Dashboard
             onNavigate={choose}
@@ -250,223 +249,79 @@ export default function AdminPage() {
   );
 }
 
-function Dashboard({
-  onNavigate,
-  onCreate,
-}: {
+function Dashboard({ onNavigate, onCreate }: {
   onNavigate: (view: View) => void;
   onCreate: (target: "vehicle" | "driver") => void;
 }) {
   const { users, vehicles, logs } = useDemoStore();
+  const [period, setPeriod] = useState(7);
+  const [fuel, setFuel] = useState<FuelTransactionRecord[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    loadFuelTransactions().then(rows => { if (active) setFuel(rows); }).catch(() => { if (active) setFailed(true); });
+    return () => { active = false; };
+  }, []);
   const today = jakartaNow().date;
-  const todayLogs = logs.filter((l) => l.date === today);
-  const drivers = users.filter((u) => u.role === "DRIVER" && u.active);
-  const unfinished = todayLogs.filter((l) => l.status === "Belum Selesai");
-  const reviewed = todayLogs.filter((l) => l.status === "Perlu Diperiksa");
-  const total = todayLogs.reduce((sum, l) => sum + (l.distance ?? 0), 0);
-  const vehicleWorkload = vehicles.map((vehicle) => {
-    const items = todayLogs.filter((log) => log.vehicleId === vehicle.id);
-    return { vehicle, trips: items.length, distance: items.reduce((sum, log) => sum + (log.distance ?? 0), 0) };
-  }).filter((item) => item.trips > 0).sort((a, b) => b.distance - a.distance);
-  const completed = todayLogs.filter((l) => l.endKm != null).length;
-  const completion = todayLogs.length
-    ? Math.round((completed / todayLogs.length) * 100)
-    : 0;
+  const todayLogs = logs.filter(l => l.date === today);
+  const drivers = users.filter(u => u.role === "DRIVER" && u.active);
+  const completed = todayLogs.filter(l => l.endKm != null).length;
+  const vehicleWorkload = vehicles.map(vehicle => {
+    const rows = todayLogs.filter(log => log.vehicleId === vehicle.id);
+    return { vehicle, trips: rows.length, distance: rows.reduce((sum, log) => sum + (log.distance ?? 0), 0) };
+  }).filter(item => item.trips > 0).sort((a, b) => b.distance - a.distance);
   const cards = [
-    {
-      label: "Kendaraan aktif",
-      value: vehicles.filter((v) => v.active).length,
-      detail: `${vehicles.length} total armada`,
-      icon: Truck,
-      tone: "from-teal-500 to-teal-700",
-      view: "vehicles" as View,
-    },
-    {
-      label: "Driver aktif",
-      value: drivers.length,
-      detail: `${users.filter((u) => u.role === "DRIVER").length} driver terdaftar`,
-      icon: UserCheck,
-      tone: "from-violet-500 to-violet-700",
-      view: "drivers" as View,
-    },
-    {
-      label: "Perjalanan hari ini",
-      value: todayLogs.length,
-      detail: `${completed} sudah selesai`,
-      icon: Route,
-      tone: "from-emerald-500 to-emerald-700",
-      view: "logs" as View,
-    },
-    {
-      label: "Total jarak hari ini",
-      value: `${formatKm(total)} KM`,
-      detail: "Akumulasi perjalanan",
-      icon: Activity,
-      tone: "from-orange-400 to-red-500",
-      view: "logs" as View,
-    },
-  ];
-  const displayDate = new Intl.DateTimeFormat("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Asia/Jakarta",
-  }).format(new Date());
-  return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="rounded-3xl bg-[#075b57] p-5 text-white sm:hidden">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-300/30 px-3 py-1.5 text-[11px] font-bold text-teal-100">
-          <Sparkles className="h-3.5 w-3.5" /> Pusat Kendali Operasional
-        </div>
-        <h2 className="text-[1.65rem] font-extrabold leading-tight">
-          Selamat datang, Admin Operasional
-        </h2>
-        <p className="mt-2 flex items-center gap-2 text-sm text-teal-100">
-          <CalendarDays className="h-4 w-4" /> {displayDate}
-        </p>
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <Button
-            className="h-auto min-h-11 whitespace-normal bg-white px-2 text-xs leading-tight text-jne-blue"
-            onClick={() => onCreate("vehicle")}
-          >
-            <Plus className="h-4 w-4" /> Tambah Kendaraan
-          </Button>
-          <Button
-            className="h-auto min-h-11 whitespace-normal border border-teal-300/40 bg-[#087b73] px-2 text-xs leading-tight text-white shadow-none"
-            onClick={() => onCreate("driver")}
-          >
-            <Plus className="h-4 w-4" /> Tambah Driver
-          </Button>
-        </div>
+    { label: "Kendaraan aktif", value: vehicles.filter(v => v.active).length, detail: `dari ${vehicles.length} kendaraan`, icon: Truck, view: "vehicles" },
+    { label: "Driver aktif", value: drivers.length, detail: `dari ${users.filter(u => u.role === "DRIVER").length} driver`, icon: UserCheck, view: "drivers" },
+    { label: "Perjalanan hari ini", value: todayLogs.length, detail: `${completed} perjalanan selesai`, icon: Route, view: "logs" },
+    { label: "Total jarak", value: `${formatKm(todayLogs.reduce((sum, l) => sum + (l.distance ?? 0), 0))} km`, detail: "Akumulasi hari ini", icon: Gauge, view: "logs" },
+  ] as const;
+  const days = Array.from({ length: period }, (_, i) => {
+    const date = new Date(today + "T00:00:00Z");
+    date.setUTCDate(date.getUTCDate() - period + i + 1);
+    const day = date.toISOString().slice(0, 10);
+    return { day, count: logs.filter(log => log.date === day).length };
+  });
+  const max = Math.max(1, ...days.map(d => d.count));
+  const points = days.map((d, i) => [36 + i * 688 / (period - 1), 180 - d.count / max * 146]);
+  const line = points.map(p => p.join(",")).join(" ");
+  const attention = [
+    { label: "Belum input KM awal", count: drivers.filter(d => !todayLogs.some(l => l.driverId === d.id)).length, view: "drivers" },
+    { label: "Belum input KM akhir", count: logs.filter(l => !l.endTime && l.status === "Belum Selesai").length, view: "logs" },
+    { label: "Validasi BBM", count: fuel?.filter(f => f.status === "SUBMITTED" || f.status === "NEED_REVIEW").length, view: "fuel-validation" },
+  ] as const;
+  return <div className="space-y-5">
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div><h2 className="text-[28px] font-extrabold leading-tight">Dashboard Operasional</h2><p className="mt-1 text-sm text-slate-600">Pantau armada, perjalanan, dan penggunaan BBM dalam satu tempat.</p></div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm"><CalendarDays className="h-4 w-4" />{new Intl.DateTimeFormat("id-ID", { dateStyle: "long", timeZone: "Asia/Jakarta" }).format(new Date())}</span>
+        <Button variant="outline" onClick={() => onNavigate("export")}><Download className="h-4 w-4" /> Export Laporan</Button>
       </div>
-      <section className="relative hidden isolate overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#062b36] via-jne-blue to-[#0aa89a] p-8 text-white shadow-[0_22px_50px_rgba(0,143,131,.24)] sm:block">
-        <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[45px] border-white/5" />
-        <div className="absolute -bottom-24 right-1/3 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
-        <div className="relative flex flex-col justify-between gap-7 lg:flex-row lg:items-center">
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-teal-100">
-              <Sparkles className="h-3.5 w-3.5" /> Pusat Kendali Operasional
-            </div>
-            <h2 className="max-w-xl text-3xl font-extrabold leading-tight">
-              Selamat datang, Admin Operasional
-            </h2>
-            <p className="mt-2 flex items-center gap-2 text-sm text-teal-100">
-              <CalendarDays className="h-4 w-4" /> {displayDate}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              className="border border-white/20 bg-white text-jne-blue hover:bg-teal-50"
-              onClick={() => onCreate("vehicle")}
-            >
-              <Plus className="h-4 w-4" /> Tambah Kendaraan
-            </Button>
-            <Button
-              className="border border-white/20 bg-white/10 text-white shadow-none hover:bg-white/20"
-              onClick={() => onCreate("driver")}
-            >
-              <Plus className="h-4 w-4" /> Tambah Driver
-            </Button>
-          </div>
-        </div>
-      </section>
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        {cards.map((c) => (
-          <button
-            key={c.label}
-            onClick={() => onNavigate(c.view)}
-            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-3 text-left sm:p-5 sm:shadow-sm sm:transition sm:hover:-translate-y-0.5 sm:hover:shadow-lg"
-          >
-            <div className="flex items-start justify-between">
-              <span
-                className={`rounded-xl bg-gradient-to-br p-2.5 text-white sm:rounded-2xl sm:p-3 sm:shadow-lg ${c.tone}`}
-              >
-                <c.icon className="h-5 w-5 sm:h-6 sm:w-6" />
-              </span>
-              <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:text-jne-blue sm:h-5 sm:w-5" />
-            </div>
-            <p className="mt-4 break-words text-xl font-extrabold text-slate-900 sm:mt-5 sm:text-2xl">
-              {c.value}
-            </p>
-            <p className="mt-1 text-xs font-semibold leading-tight text-slate-700 sm:text-sm">
-              {c.label}
-            </p>
-            <p className="mt-1 text-[11px] leading-tight text-slate-400 sm:text-xs">{c.detail}</p>
-          </button>
-        ))}
-      </div>
-      <div className="grid gap-5 xl:grid-cols-3">
-        <Card className="overflow-hidden border-0 shadow-soft xl:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4">
-            <div>
-              <h3 className="font-extrabold text-slate-900">
-                Aktivitas terbaru
-              </h3>
-              <p className="text-sm text-slate-500">
-                Perjalanan yang masuk hari ini
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onNavigate("logs")}
-            >
-              Lihat semua <ArrowUpRight className="h-3.5 w-3.5" />
-            </Button>
-          </CardHeader>
-          <CardContent className="pt-2">
-            {todayLogs.length ? (
-              <div>
-                {todayLogs.slice(0, 5).map((log) => (
-                  <LogRow key={log.id} log={log} />
-                ))}
-              </div>
-            ) : (
-              <Empty text="Belum ada perjalanan hari ini." />
-            )}
-          </CardContent>
-        </Card>
-        <div className="space-y-4">
-          <Card className="overflow-hidden border-0 bg-slate-900 text-white shadow-soft">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold">Penyelesaian Hari Ini</p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {completed} dari {todayLogs.length} perjalanan
-                  </p>
-                </div>
-                <span className="text-2xl font-extrabold">{completion}%</span>
-              </div>
-              <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all"
-                  style={{ width: `${completion}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-          <AlertCard
-            label="Belum input KM awal"
-            value={Math.max(0, drivers.length - todayLogs.length)}
-            detail="driver aktif"
-            tone="amber"
-          />
-          <AlertCard
-            label="Belum input KM akhir"
-            value={unfinished.length}
-            detail="perjalanan berjalan"
-            tone="amber"
-          />
-          <AlertCard
-            label="Perlu diperiksa"
-            value={reviewed.length}
-            detail="data tidak biasa"
-            tone="red"
-          />
-        </div>
-      </div>
+    </div>
+    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      {cards.map(({ label, value, detail, icon: Icon, view }) => <button key={label} onClick={() => onNavigate(view)} className="group flex min-w-0 flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm hover:border-blue-300 sm:flex-row sm:gap-4 sm:p-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700"><Icon className="h-5 w-5" /></span><span className="min-w-0"><span className="block text-sm font-semibold">{label}</span><strong className="block text-[30px] leading-tight tabular-nums">{value}</strong><span className="text-xs text-slate-500">{detail}</span></span></button>)}
+    </div>
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,2.2fr)_minmax(260px,1fr)]">
+      <Card className="min-w-0 p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-xl font-extrabold">Aktivitas Perjalanan</h3><div className="flex rounded-lg bg-slate-100 p-1">{[7, 30].map(p => <button key={p} aria-pressed={p === period} onClick={() => setPeriod(p)} className={`rounded-md px-3 py-1.5 text-sm font-semibold ${p === period ? "bg-admin-primary text-white" : "text-slate-600"}`}>{p} hari</button>)}</div></div>
+        {days.some(d => d.count) ? <><svg viewBox="0 0 760 200" className="mt-3 w-full text-admin-primary" role="img" aria-label={`Jumlah perjalanan per hari selama ${period} hari`}>
+          <defs><linearGradient id="trip-area" x2="0" y2="1"><stop stopColor="currentColor" stopOpacity=".28" /><stop offset="1" stopColor="currentColor" stopOpacity=".03" /></linearGradient></defs>
+          {[0, .25, .5, .75, 1].map(n => <g key={n}><line x1="36" x2="724" y1={180 - n * 146} y2={180 - n * 146} stroke="#e2e8f0" /><text x="29" y={184 - n * 146} textAnchor="end" fill="#475569" fontSize="12">{Number((max * n).toFixed(1))}</text></g>)}
+          <polygon points={`36,180 ${line} 724,180`} fill="url(#trip-area)" /><polyline points={line} fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+          {points.map(([x, y], i) => <circle key={days[i].day} cx={x} cy={y} r={period === 7 ? 4 : 2.5} fill="currentColor" stroke="white"><title>{formatDate(days[i].day)}: {days[i].count} perjalanan</title></circle>)}
+        </svg><div className="flex justify-between px-3 text-xs text-slate-600">{days.filter((_, i) => period === 7 ? i % 2 === 0 : i === 0 || i === 14 || i === 29).map(d => <span key={d.day}>{formatDate(d.day)}</span>)}</div></> : <div className="grid min-h-48 place-items-center text-sm text-slate-500">Belum ada perjalanan dalam periode ini.</div>}
+      </Card>
+      <Card className="bg-admin-navy p-5 text-white">
+        <h3 className="text-xl font-extrabold">Perlu Perhatian</h3>
+        <div className="mt-2 divide-y divide-white/20">{attention.map((a, i) => <button key={a.label} onClick={() => onNavigate(a.view)} className="flex w-full items-center gap-3 py-3 text-left text-sm hover:text-blue-200"><span className={`h-2.5 w-2.5 rounded-full ${i === 2 ? "bg-amber-400" : "bg-admin-alert"}`} /><span className="flex-1">{a.label}</span><strong>{a.count ?? (failed ? "—" : "…")}</strong><ArrowUpRight className="h-4 w-4" /></button>)}</div>
+        <Button variant="outline" className="mt-4 w-full" onClick={() => onNavigate("fuel-validation")}>Tinjau validasi BBM</Button>
+      </Card>
+    </div>
+    <Card className="min-w-0 overflow-hidden">
+      <CardHeader className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-xl font-extrabold">Transaksi BBM Terbaru</h3><p className="text-sm text-slate-500">Ringkasan pengisian dan pembayaran</p></div><Button variant="outline" onClick={() => onNavigate("fuel-transactions")}>Lihat semua <ArrowUpRight className="h-4 w-4" /></Button></CardHeader>
+      {failed ? <p role="alert" className="px-5 pb-5 text-sm text-red-700">Transaksi BBM gagal dimuat.</p> : !fuel ? <div role="status" className="m-5 h-24 animate-pulse rounded-xl bg-slate-100"><span className="sr-only">Memuat transaksi BBM</span></div> : !fuel.length ? <p className="px-5 pb-5 text-sm text-slate-500">Belum ada transaksi BBM.</p> : <div className="overflow-x-auto px-4 pb-4"><table className="w-full min-w-[620px] text-sm"><thead className="bg-slate-100 text-left"><tr><th className="p-3">Kendaraan / Driver</th><th className="p-3 text-right">Jarak</th><th className="p-3 text-right">Estimasi liter</th><th className="p-3 text-right">Pembayaran</th><th className="p-3">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{fuel.slice(0, 4).map(f => <tr key={f.id}><td className="p-3"><strong className="whitespace-nowrap">{vehicles.find(v => v.id === f.vehicleId)?.plate ?? "—"}</strong><span className="block text-xs text-slate-500">{users.find(u => u.id === f.driverId)?.name ?? "—"}</span></td><td className="p-3 text-right">{formatKm(f.totalDistance)} km</td><td className="p-3 text-right">{f.estimatedLiters.toLocaleString("id-ID")} L</td><td className="whitespace-nowrap p-3 text-right">Rp {f.realPayment.toLocaleString("id-ID")}</td><td className="p-3"><FuelStatusBadge status={f.status} /></td></tr>)}</tbody></table></div>}
+    </Card>
+    <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => onCreate("vehicle")}><Plus className="h-4 w-4" /> Tambah kendaraan</Button><Button variant="outline" onClick={() => onCreate("driver")}><Plus className="h-4 w-4" /> Tambah driver</Button></div>
       <Card className="overflow-hidden border-0 shadow-soft">
         <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4">
           <div>
@@ -479,15 +334,12 @@ function Dashboard({
           {vehicleWorkload.length ? <div className="divide-y divide-slate-100">{vehicleWorkload.slice(0, 5).map((item, index) => <div key={item.vehicle.id} className="flex items-center gap-3 py-3"><span className={`grid h-8 w-8 place-items-center rounded-lg text-sm font-extrabold ${index === 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{item.vehicle.plate} · {item.vehicle.code}</p><p className="text-xs text-slate-500">{item.trips} perjalanan</p></div><p className="font-extrabold text-slate-900">{formatKm(item.distance)} KM</p></div>)}</div> : <Empty text="Belum ada data beban aset hari ini." />}
         </CardContent>
       </Card>
-      <FuelAssetInsights vehicles={vehicles} />
-    </div>
-  );
+    <FuelAssetInsights vehicles={vehicles} items={fuel ?? []} loading={!fuel && !failed} failed={failed} />
+  </div>;
 }
 
-function FuelAssetInsights({ vehicles }: { vehicles: ReturnType<typeof useDemoStore>["vehicles"] }) {
-  const [items, setItems] = useState<FuelTransactionRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => { let active = true; loadFuelTransactions().then((data) => { if (active) setItems(data); }).catch(() => undefined).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, []);
+function FuelAssetInsights({ vehicles, items, loading, failed }: { vehicles: ReturnType<typeof useDemoStore>["vehicles"]; items: FuelTransactionRecord[]; loading: boolean; failed: boolean }) {
+  if (failed) return <Card className="p-5"><p className="text-sm text-slate-600">Insight efisiensi belum tersedia karena data BBM gagal dimuat.</p></Card>;
   const summary = vehicles.map((vehicle) => {
     const rows = items.filter((item) => item.vehicleId === vehicle.id && item.status !== "REJECTED");
     const fullRows = rows.filter((row) => row.fillingType === "FULL" && row.totalDistance > 0 && row.estimatedLiters > 0);
@@ -503,56 +355,6 @@ function InsightKpi({ label, value }: { label: string; value: string }) {
   return <div className="rounded-xl bg-slate-50 px-3 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p><p className="mt-1 text-lg font-extrabold text-slate-900">{value}</p></div>;
 }
 
-function AlertCard({
-  label,
-  value,
-  detail,
-  tone,
-}: {
-  label: string;
-  value: number;
-  detail: string;
-  tone: "amber" | "red";
-}) {
-  return (
-    <Card className={tone === "red" && value ? "border-red-200" : ""}>
-      <CardContent className="flex items-center justify-between p-5">
-        <div>
-          <p className="text-sm font-semibold text-slate-700">{label}</p>
-          <p className="text-xs text-slate-500">{detail}</p>
-        </div>
-        <span
-          className={`grid h-11 min-w-11 place-items-center rounded-xl text-lg font-extrabold ${tone === "red" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}
-        >
-          {value}
-        </span>
-      </CardContent>
-    </Card>
-  );
-}
-
-function LogRow({ log }: { log: VehicleLog }) {
-  const { users, vehicles } = useDemoStore();
-  const user = users.find((u) => u.id === log.driverId);
-  const vehicle = vehicles.find((v) => v.id === log.vehicleId);
-  return (
-    <div className="flex items-center gap-3 border-b border-slate-100 py-3 last:border-0">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-600">
-        <Truck className="h-5 w-5" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold">
-          {vehicle?.plate} · {user?.name}
-        </p>
-        <p className="text-xs text-slate-500">
-          {log.startTime} — {log.endTime ?? "masih berjalan"} ·{" "}
-          {formatKm(log.distance)} KM
-        </p>
-      </div>
-      <Badge>{log.status}</Badge>
-    </div>
-  );
-}
 
 function LogsPanel() {
   const store = useDemoStore();
@@ -770,6 +572,7 @@ function LogReviewModal({ log, onClose }: { log: VehicleLog; onClose: () => void
             Jarak hasil revisi: {distance == null ? "—" : `${formatKm(distance)} KM`}
           </div>
           <div><Label>Status verifikasi</Label><Select value={status} onChange={(e) => setStatus(e.target.value as LogStatus)}><option>Belum Selesai</option><option>Selesai</option><option>Perlu Diperiksa</option></Select></div>
+          {status === "Selesai" && !log.endTime && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Menyimpan akan menutup perjalanan agar driver dapat memulai perjalanan baru. Jam akhir dicatat sebagai waktu penutupan admin; KM akhir yang kosong tetap belum dilaporkan.</p>}
           <div><Label>Catatan admin</Label><Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Contoh: Koreksi kelebihan 1 digit setelah cek foto" /></div>
           {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
           <div className="grid gap-2 sm:grid-cols-2">

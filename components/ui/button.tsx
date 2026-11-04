@@ -15,5 +15,5 @@ export function Button({ className, variant = "primary", size = "default", ...pr
     ghost: "text-slate-600 hover:bg-slate-100",
   };
   const sizes = { default: "h-11 px-4", sm: "h-9 px-3 text-sm", lg: "h-14 px-6 text-base", icon: "h-10 w-10" };
-  return <button className={cn("inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition disabled:pointer-events-none disabled:opacity-50", variants[variant], sizes[size], className)} {...props} />;
+  return <button className={cn("inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", variants[variant], sizes[size], className)} {...props} />;
 }

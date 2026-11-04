@@ -11,15 +11,34 @@
 }
 
 html {
-  background: #f2f8f7;
+  background: #f5f7fa;
 }
 
 body {
   margin: 0;
-  color: #102a2e;
-  background: #f2f8f7;
-  font-family: Arial, Helvetica, sans-serif;
+  color: #18283e;
+  background: #f5f7fa;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+.movetra-workspace h1,
+.movetra-workspace h2,
+.movetra-workspace h3 { letter-spacing: -0.025em; }
+.movetra-workspace { font-family: Inter, "Segoe UI", Arial, sans-serif; color: #0f172a; }
+.movetra-workspace .bg-jne-blue { background-color: #1554c0; }
+.movetra-workspace .text-jne-blue { color: #1554c0; }
+.movetra-workspace .border-jne-blue,
+.movetra-workspace .focus\:border-jne-blue:focus { border-color: #1554c0; }
+.movetra-workspace button.bg-jne-blue:hover { background-color: #10449e; }
+.movetra-workspace :focus-visible { outline-color: #1554c0; }
+.movetra-workspace table { font-variant-numeric: tabular-nums; }
+.movetra-workspace th { font-size: 10px; letter-spacing: 0.06em; }
+.movetra-workspace td { border-color: #edf0f4; }
+.movetra-workspace ::-webkit-scrollbar { width: 6px; height: 6px; }
+.movetra-workspace ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+button:focus-visible, a:focus-visible { outline: 2px solid #008f83; outline-offset: 3px; }
 
 .movetra-car-marker {
   display: flex;

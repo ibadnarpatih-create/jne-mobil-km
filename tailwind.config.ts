@@ -5,8 +5,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        movetra: { navy: "#071d3d", teal: "#008f83", pale: "#f2f8f7" },
-        jne: { red: "#e31e24", blue: "#008f83", pale: "#f2f8f7" },
+        admin: { navy: "#10245A", primary: "#1554C0", alert: "#E51F35", canvas: "#F5F7FB" },
+        movetra: { navy: "#101f36", teal: "#008f83", pale: "#f5f7fa" },
+        jne: { red: "#e31e24", blue: "#008f83", pale: "#f5f7fa" },
         blue: {
           50: "#f0fdfa",
           100: "#ccfbf1",
@@ -20,7 +21,7 @@ export default {
           900: "#134e4a",
         },
       },
-      boxShadow: { soft: "0 12px 36px rgba(0,143,131,.12)" },
+      boxShadow: { soft: "0 8px 32px rgba(15,23,42,.06)" },
       borderRadius: { xl2: "1.25rem" },
     },
   },
