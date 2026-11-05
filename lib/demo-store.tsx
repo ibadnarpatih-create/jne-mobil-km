@@ -144,6 +144,7 @@ type Store = {
   updateLog: (id: string, patch: Partial<VehicleLog>) => Promise<void>;
   lockLog: (id: string) => Promise<void>;
   saveVehicle: (vehicle: Vehicle) => Promise<void>;
+  deleteVehicle: (id: string) => Promise<void>;
   saveUser: (user: User) => Promise<void>;
   saveAssetUnitLabels: (labels: string[]) => Promise<void>;
   resetUserPassword: (userId: string, password: string) => Promise<void>;
@@ -568,6 +569,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             .eq("id", id);
           if (error) throw error;
         }
+      },
+      async deleteVehicle(id) {
+        if (currentUser?.role !== "ADMIN") throw new Error("Hanya admin yang dapat menghapus aset.");
+        if (logs.some(log => log.vehicleId === id)) throw new Error("Aset memiliki riwayat perjalanan. Nonaktifkan aset agar riwayat tetap utuh.");
+        if (supabase) {
+          const { data, error } = await supabase.from("vehicles").delete().eq("id", id).select("id").single();
+          if (error) {
+            if (error.code === "23503") throw new Error("Aset masih digunakan dalam riwayat operasional. Nonaktifkan aset ini.");
+            throw error;
+          }
+          if (!data) throw new Error("Aset belum berhasil dihapus.");
+        } else {
+          const fuel = JSON.parse(localStorage.getItem("movetra-fuel-transactions-v1") ?? "[]") as { vehicleId: string }[];
+          if (fuel.some(row => row.vehicleId === id)) throw new Error("Aset memiliki riwayat BBM. Nonaktifkan aset ini.");
+        }
+        setVehicles(items => items.filter(vehicle => vehicle.id !== id));
+        setUsers(items => items.map(user => user.vehicleId === id ? { ...user, vehicleId: undefined } : user));
       },
       async saveVehicle(vehicle) {
         if (supabase) {
