@@ -21,7 +21,6 @@ import {
   LogOut,
   Menu,
   Pencil,
-  Phone,
   Plus,
   Power,
   PowerOff,
@@ -54,6 +53,7 @@ import { TrackingPanel } from "@/components/tracking-panel";
 import { AssetTripsPanel } from "@/components/asset-trips-panel";
 import { loadFuelTransactions, type FuelTransactionRecord } from "@/lib/fuel/admin";
 import { FuelStatusBadge } from "@/components/fuel/fuel-status";
+import { MasterDataTable, MasterSummary, RecordStatus, RowActions } from "@/components/admin/master-data-table";
 
 type View =
   "dashboard" | "tracking" | "logs" | "vehicles" | "drivers" | "export" | "settings"
@@ -64,8 +64,8 @@ const nav: { id: View; label: string; icon: typeof LayoutDashboard; group: strin
   { id: "tracking", label: "Tracking", icon: Route, group: "Overview" },
   { id: "logs", label: "Data Harian Mobil", icon: BarChart3, group: "Operasional" },
   { id: "asset-trips", label: "Trip Aset Antar Hub", icon: ClipboardList, group: "Operasional" },
-  { id: "vehicles", label: "Data Kendaraan", icon: CarFront, group: "Master Data" },
-  { id: "drivers", label: "Data Driver", icon: Users, group: "Master Data" },
+  { id: "vehicles", label: "Data Aset", icon: CarFront, group: "Master Data" },
+  { id: "drivers", label: "Data Karyawan", icon: Users, group: "Master Data" },
   { id: "fuel-transactions", label: "Transaksi BBM", icon: Fuel, group: "Manajemen BBM" },
   { id: "fuel-validation", label: "Validasi BBM", icon: ShieldCheck, group: "Manajemen BBM" },
   { id: "fuel-report", label: "Laporan BBM", icon: FileSpreadsheet, group: "Manajemen BBM" },
@@ -740,8 +740,8 @@ function VehiclesPanel({
   };
   return (
     <MasterLayout
-      title="Data kendaraan"
-      subtitle={`${store.vehicles.filter((v) => v.active).length} aktif dari ${store.vehicles.length} kendaraan`}
+      title="Data Aset"
+      subtitle="Kelola kendaraan dan penugasan armada."
       button="Tambah Kendaraan"
       onAdd={() =>
         setEditing({
@@ -758,6 +758,12 @@ function VehiclesPanel({
       onSecondary={() => setImporting(true)}
     >
       {notice && <ActionNotice text={notice} onClose={() => setNotice("")} />}
+      <MasterSummary items={[
+        { label: "Total Aset", value: store.vehicles.length, icon: <CarFront className="h-5 w-5" /> },
+        { label: "Aktif", value: store.vehicles.filter(v => v.active).length, icon: <CheckCircle2 className="h-5 w-5" />, tone: "bg-green-100 text-green-700" },
+        { label: "Digunakan", value: store.vehicles.filter(v => store.logs.some(l => l.vehicleId === v.id && !l.endTime && l.status === "Belum Selesai")).length, icon: <Truck className="h-5 w-5" /> },
+        { label: "Nonaktif", value: store.vehicles.filter(v => !v.active).length, icon: <PowerOff className="h-5 w-5" />, tone: "bg-red-100 text-red-700" },
+      ]} />
       <Card className="border-0 shadow-sm">
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row">
           <div className="relative flex-1">
@@ -792,77 +798,11 @@ function VehiclesPanel({
           </Select>
         </CardContent>
       </Card>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {rows.map((v) => (
-          <Card
-            key={v.id}
-            className={`group overflow-hidden border-0 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${!v.active ? "opacity-75" : ""}`}
-          >
-            <div
-              className={`h-1.5 ${v.active ? "bg-gradient-to-r from-jne-blue to-teal-400" : "bg-slate-300"}`}
-            />
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <span
-                  className={`rounded-2xl p-3 ${v.active ? "bg-teal-50 text-jne-blue" : "bg-slate-100 text-slate-400"}`}
-                >
-                  <CarFront className="h-7 w-7" />
-                </span>
-                <div className="flex flex-col items-end gap-2">
-                  <Badge>{v.active ? "Aktif" : "Nonaktif"}</Badge>
-                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-extrabold text-slate-600">
-                    {v.unitGroup}
-                  </span>
-                </div>
-              </div>
-              <h3 className="mt-5 text-xl font-extrabold tracking-tight text-slate-900">
-                {v.plate}
-              </h3>
-              <p className="mt-1 text-sm font-bold text-jne-blue">{v.code}</p>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-slate-50 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                    Jenis
-                  </p>
-                  <p className="mt-1 truncate text-sm font-bold text-slate-700">
-                    {v.type}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                    KM Terakhir
-                  </p>
-                  <p className="mt-1 text-sm font-bold text-slate-700">
-                    {formatKm(v.lastKm)}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={() => setEditing(v)}>
-                  <Pencil className="h-4 w-4" /> Ubah
-                </Button>
-                <Button
-                  variant={v.active ? "danger" : "primary"}
-                  disabled={savingId === v.id}
-                  onClick={() => toggle(v)}
-                >
-                  {v.active ? (
-                    <PowerOff className="h-4 w-4" />
-                  ) : (
-                    <Power className="h-4 w-4" />
-                  )}
-                  {v.active ? "Nonaktifkan" : "Aktifkan"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {!rows.length && (
-          <Card className="md:col-span-2 xl:col-span-3">
-            <Empty text="Kendaraan tidak ditemukan." />
-          </Card>
-        )}
-      </div>
+      <MasterDataTable rows={rows} resetKey={search + status + unit} columns={["Aset / Plat Nomor", "Jenis / Unit", "Driver", "KM terakhir", "Status", "Aksi"]} empty="Kendaraan tidak ditemukan." render={v => {
+        const assigned = store.users.filter(u => u.role === "DRIVER" && u.vehicleId === v.id);
+        const inUse = store.logs.some(l => l.vehicleId === v.id && !l.endTime && l.status === "Belum Selesai");
+        return <><td><div className="flex items-center gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700"><CarFront className="h-5 w-5" /></span><div><p className="whitespace-nowrap font-bold">{v.plate}</p><p className="text-xs text-slate-500">{v.code}</p></div></div></td><td><p>{v.type}</p><p className="text-xs text-slate-500">{v.unitGroup}</p></td><td><p className="max-w-52">{assigned.map(u => u.name).join(", ") || "Belum ditentukan"}</p></td><td className="whitespace-nowrap tabular-nums">{formatKm(v.lastKm)}</td><td>{inUse && v.active ? <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">Digunakan</span> : <RecordStatus active={v.active} />}</td><td><div className="flex items-center justify-end gap-1"><Button size="icon" variant="ghost" aria-label={`Ubah ${v.plate}`} onClick={() => setEditing(v)}><Pencil className="h-4 w-4" /></Button><RowActions label={v.plate}><Button variant="ghost" onClick={() => setEditing(v)}><Pencil className="h-4 w-4" /> Ubah data</Button><Button variant={v.active ? "danger" : "ghost"} disabled={savingId === v.id} onClick={() => toggle(v)}><Power className="h-4 w-4" />{v.active ? "Nonaktifkan" : "Aktifkan"}</Button></RowActions></div></td></>;
+      }} />
       {editing && (
         <VehicleForm
           value={editing}
@@ -1083,8 +1023,8 @@ function DriversPanel({
   };
   return (
     <MasterLayout
-      title="Data driver"
-      subtitle={`${drivers.filter((u) => u.active).length} aktif dari ${drivers.length} driver`}
+      title="Data Karyawan"
+      subtitle="Kelola profil, akses, dan penugasan driver."
       button="Tambah Driver"
       onAdd={() =>
         setEditing({
@@ -1101,6 +1041,11 @@ function DriversPanel({
       onSecondary={() => setImporting(true)}
     >
       {notice && <ActionNotice text={notice} onClose={() => setNotice("")} />}
+      <MasterSummary items={[
+        { label: "Total Karyawan", value: drivers.length, icon: <Users className="h-5 w-5" /> },
+        { label: "Aktif", value: drivers.filter(u => u.active).length, icon: <UserCheck className="h-5 w-5" />, tone: "bg-green-100 text-green-700" },
+        { label: "Nonaktif", value: drivers.filter(u => !u.active).length, icon: <PowerOff className="h-5 w-5" />, tone: "bg-red-100 text-red-700" },
+      ]} />
       <Card className="border-0 shadow-sm">
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row">
           <div className="relative flex-1">
@@ -1123,84 +1068,10 @@ function DriversPanel({
           </Select>
         </CardContent>
       </Card>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {rows.map((u) => {
-          const vehicle = store.vehicles.find((v) => v.id === u.vehicleId);
-          const initials = u.name
-            .split(" ")
-            .map((x) => x[0])
-            .slice(0, 2)
-            .join("");
-          return (
-            <Card
-              key={u.id}
-              className={`overflow-hidden border-0 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${!u.active ? "opacity-75" : ""}`}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between">
-                  <span
-                    className={`grid h-14 w-14 place-items-center rounded-2xl text-lg font-extrabold ${u.active ? "bg-gradient-to-br from-jne-blue to-teal-500 text-white shadow-lg" : "bg-slate-100 text-slate-400"}`}
-                  >
-                    {initials}
-                  </span>
-                  <Badge>{u.active ? "Aktif" : "Nonaktif"}</Badge>
-                </div>
-                <h3 className="mt-4 text-lg font-extrabold capitalize text-slate-900">
-                  {u.name.toLowerCase()}
-                </h3>
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
-                  <Phone className="h-3.5 w-3.5" /> {u.phone}
-                </p>
-                <p className="mt-1 text-xs font-extrabold tracking-wide text-jne-blue">
-                  ID LOGIN: {u.loginId ?? "-"}
-                </p>
-                <div className="mt-4 rounded-xl bg-slate-50 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                    Kendaraan Utama
-                  </p>
-                  <p className="mt-1 truncate text-sm font-bold text-slate-700">
-                    {vehicle
-                      ? `${vehicle.plate} · ${vehicle.code}`
-                      : "Belum ditentukan"}
-                  </p>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <Button variant="outline" onClick={() => setEditing(u)}>
-                    <Pencil className="h-4 w-4" /> Ubah
-                  </Button>
-                  <Button variant="outline" onClick={() => setResetting(u)}>
-                    <KeyRound className="h-4 w-4" /> Reset Password
-                  </Button>
-                  <Button
-                    variant={u.active ? "danger" : "primary"}
-                    disabled={savingId === u.id}
-                    onClick={() => toggle(u)}
-                  >
-                    {u.active ? (
-                      <PowerOff className="h-4 w-4" />
-                    ) : (
-                      <Power className="h-4 w-4" />
-                    )}
-                    {u.active ? "Nonaktifkan" : "Aktifkan"}
-                  </Button>
-                  <Button
-                    variant="danger"
-                    disabled={savingId === u.id}
-                    onClick={() => remove(u)}
-                  >
-                    <Trash2 className="h-4 w-4" /> Hapus
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-        {!rows.length && (
-          <Card className="md:col-span-2 xl:col-span-3">
-            <Empty text="Driver tidak ditemukan." />
-          </Card>
-        )}
-      </div>
+      <MasterDataTable rows={rows} resetKey={search + status} columns={["Karyawan", "ID Login", "Peran", "Kendaraan Utama", "Status", "Aksi"]} empty="Driver tidak ditemukan." render={u => {
+        const vehicle = store.vehicles.find(v => v.id === u.vehicleId);
+        return <><td><div className="flex items-center gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-100 text-xs font-bold text-blue-700">{u.name.split(" ").filter(Boolean).slice(0,2).map(n => n[0]).join("")}</span><div><p className="font-semibold">{u.name}</p><p className="text-xs text-slate-500">{u.phone}</p></div></div></td><td className="whitespace-nowrap">{u.loginId || "—"}</td><td>Driver</td><td><p className="whitespace-nowrap">{vehicle?.plate ?? "Belum ditentukan"}</p>{vehicle && <p className="text-xs text-slate-500">{vehicle.code}</p>}</td><td><RecordStatus active={u.active} /></td><td><div className="flex items-center justify-end gap-1"><Button size="icon" variant="ghost" aria-label={`Ubah ${u.name}`} onClick={() => setEditing(u)}><Pencil className="h-4 w-4" /></Button><RowActions label={u.name}><Button variant="ghost" onClick={() => setEditing(u)}><Pencil className="h-4 w-4" /> Ubah data</Button><Button variant="ghost" onClick={() => setResetting(u)}><KeyRound className="h-4 w-4" /> Reset password</Button><Button variant="ghost" disabled={savingId === u.id} onClick={() => toggle(u)}><Power className="h-4 w-4" />{u.active ? "Nonaktifkan" : "Aktifkan"}</Button><Button variant="danger" disabled={savingId === u.id} onClick={() => remove(u)}><Trash2 className="h-4 w-4" /> Hapus</Button></RowActions></div></td></>;
+      }} />
       {editing && (
         <DriverForm
           value={editing}
