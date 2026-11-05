@@ -4,8 +4,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function MasterDataTable<T extends { id: string }>({ rows, columns, render, empty, resetKey }: {
+export function MasterDataTable<T extends { id: string }>({ rows, columns, render, empty, resetKey, selection }: {
   rows: T[]; columns: string[]; render: (row: T) => ReactNode; empty: string; resetKey: string;
+  selection?: { ids: string[]; disabled?: boolean; onChange: (ids: string[]) => void; label: (row: T) => string };
 }) {
   const [page, setPage] = useState(1);
   useEffect(() => { setPage(1); }, [resetKey]);
@@ -14,8 +15,8 @@ export function MasterDataTable<T extends { id: string }>({ rows, columns, rende
   const current = Math.min(page, pages);
   return <div className="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm">
     <div className="overflow-x-auto has-[details[open]]:pb-48"><table className="w-full min-w-[760px] text-left text-sm">
-      <thead className="border-b border-slate-200 bg-slate-50 text-slate-600"><tr>{columns.map(c => <th key={c} className={`px-5 py-3 font-semibold ${c === "Aksi" ? "text-right" : ""}`}>{c}</th>)}</tr></thead>
-      <tbody className="divide-y divide-slate-100">{rows.slice((current - 1) * size, current * size).map(row => <tr key={row.id} className="hover:bg-blue-50/40 [&>td]:px-5 [&>td]:py-3">{render(row)}</tr>)}</tbody>
+      <thead className="border-b border-slate-200 bg-slate-50 text-slate-600"><tr>{selection && <th className="w-10 px-5 py-3"><input type="checkbox" aria-label="Pilih semua hasil filter, termasuk halaman lain" disabled={selection.disabled || !rows.length} checked={rows.length > 0 && rows.every(row => selection.ids.includes(row.id))} onChange={e => selection.onChange(e.target.checked ? rows.map(row => row.id) : [])} /></th>}{columns.map(c => <th key={c} className={`px-5 py-3 font-semibold ${c === "Aksi" ? "text-right" : ""}`}>{c}</th>)}</tr></thead>
+      <tbody className="divide-y divide-slate-100">{rows.slice((current - 1) * size, current * size).map(row => <tr key={row.id} className="hover:bg-blue-50/40 [&>td]:px-5 [&>td]:py-3">{selection && <td><input type="checkbox" aria-label={`Pilih ${selection.label(row)}`} disabled={selection.disabled} checked={selection.ids.includes(row.id)} onChange={e => selection.onChange(e.target.checked ? [...selection.ids, row.id] : selection.ids.filter(id => id !== row.id))} /></td>}{render(row)}</tr>)}</tbody>
     </table>{!rows.length && <p className="p-10 text-center text-sm text-slate-500">{empty}</p>}</div>
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 text-xs text-slate-600">
       <span>Menampilkan {rows.length ? (current - 1) * size + 1 : 0}–{Math.min(current * size, rows.length)} dari {rows.length} hasil</span>

@@ -680,6 +680,26 @@ function VehiclesPanel({
   const [savingId, setSavingId] = useState("");
   const [notice, setNotice] = useState("");
   const defaultUnit = store.assetUnitLabels[0] ?? "INBOUND";
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
+  const [deletingAssets, setDeletingAssets] = useState(false);
+  useEffect(() => { setSelectedAssets([]); }, [search, status, unit]);
+  const deleteSelectedAssets = async () => {
+    const targets = store.vehicles.filter(v => selectedAssets.includes(v.id));
+    if (!targets.length || deletingAssets) return;
+    if (!window.confirm(`Hapus ${targets.length} aset terpilih?\n${targets.map(v => v.plate).join(", ")}\nAset yang memiliki riwayat tidak akan dihapus. Penghapusan tidak dapat dibatalkan.`)) return;
+    setDeletingAssets(true);
+    const failed: string[] = [];
+    const errors: string[] = [];
+    let deleted = 0;
+    try {
+      for (const asset of targets) {
+        try { await store.deleteVehicle(asset.id); deleted++; }
+        catch (error) { failed.push(asset.id); errors.push(`${asset.plate}: ${error instanceof Error ? error.message : "Gagal dihapus"}`); }
+      }
+      setSelectedAssets(failed);
+      setNotice(`${deleted} aset berhasil dihapus.${failed.length ? " " + failed.length + " aset tidak dihapus. " + errors.join(" • ") : ""}`);
+    } finally { setDeletingAssets(false); }
+  };
   useEffect(() => {
     if (autoAdd) {
       setEditing({
@@ -798,7 +818,11 @@ function VehiclesPanel({
           </Select>
         </CardContent>
       </Card>
-      <MasterDataTable rows={rows} resetKey={search + status + unit} columns={["Aset / Plat Nomor", "Jenis / Unit", "Driver", "KM terakhir", "Status", "Aksi"]} empty="Kendaraan tidak ditemukan." render={v => {
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm">
+        <span>{selectedAssets.length} aset dipilih · Checkbox judul memilih semua hasil filter, termasuk halaman lain.</span>
+        <div className="flex gap-2"><Button variant="outline" disabled={deletingAssets} onClick={() => { setStatus("inactive"); setSelectedAssets([]); }}>Tampilkan nonaktif</Button><Button variant="danger" disabled={!selectedAssets.length || deletingAssets} onClick={() => void deleteSelectedAssets()}><Trash2 className="h-4 w-4" />{deletingAssets ? "Menghapus…" : "Hapus terpilih"}</Button></div>
+      </div>
+      <MasterDataTable rows={rows} resetKey={search + status + unit} selection={{ ids: selectedAssets, onChange: setSelectedAssets, disabled: deletingAssets, label: v => v.plate }} columns={["Aset / Plat Nomor", "Jenis / Unit", "Driver", "KM terakhir", "Status", "Aksi"]} empty="Kendaraan tidak ditemukan." render={v => {
         const assigned = store.users.filter(u => u.role === "DRIVER" && u.vehicleId === v.id);
         const inUse = store.logs.some(l => l.vehicleId === v.id && !l.endTime && l.status === "Belum Selesai");
         return <><td><div className="flex items-center gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700"><CarFront className="h-5 w-5" /></span><div><p className="whitespace-nowrap font-bold">{v.plate}</p><p className="text-xs text-slate-500">{v.code}</p></div></div></td><td><p>{v.type}</p><p className="text-xs text-slate-500">{v.unitGroup}</p></td><td><p className="max-w-52">{assigned.map(u => u.name).join(", ") || "Belum ditentukan"}</p></td><td className="whitespace-nowrap tabular-nums">{formatKm(v.lastKm)}</td><td>{inUse && v.active ? <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">Digunakan</span> : <RecordStatus active={v.active} />}</td><td><div className="flex items-center justify-end gap-1"><Button size="icon" variant="ghost" aria-label={`Ubah ${v.plate}`} onClick={() => setEditing(v)}><Pencil className="h-4 w-4" /></Button><RowActions label={v.plate}><Button variant="ghost" onClick={() => setEditing(v)}><Pencil className="h-4 w-4" /> Ubah data</Button><Button variant={v.active ? "danger" : "ghost"} disabled={savingId === v.id} onClick={() => toggle(v)}><Power className="h-4 w-4" />{v.active ? "Nonaktifkan" : "Aktifkan"}</Button><Button variant="danger" disabled={savingId === v.id} onClick={async () => { if (!window.confirm(`Hapus aset ${v.plate}? Penghapusan tidak dapat dibatalkan. Aset dengan riwayat operasional tidak dapat dihapus.`)) return; setSavingId(v.id); try { await store.deleteVehicle(v.id); setNotice("Aset berhasil dihapus."); } catch (error) { setNotice(error instanceof Error ? error.message : "Aset gagal dihapus."); } finally { setSavingId(""); } }}><Trash2 className="h-4 w-4" /> Hapus aset</Button></RowActions></div></td></>;
