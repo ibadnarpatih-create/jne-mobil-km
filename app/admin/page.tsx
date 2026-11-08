@@ -361,6 +361,8 @@ function LogsPanel() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [date, setDate] = useState("");
+  const [page, setPage] = useState(0);
+  const today = jakartaNow().date;
   const [photo, setPhoto] = useState<{
     log: VehicleLog;
     type: "awal" | "akhir";
@@ -381,6 +383,17 @@ function LogsPanel() {
       }),
     [store.logs, store.users, store.vehicles, search, status, date],
   );
+  const ordered = [...rows].sort((a, b) =>
+    Number(b.date === today) - Number(a.date === today) ||
+    b.date.localeCompare(a.date) ||
+    b.startTime.localeCompare(a.startTime),
+  );
+  const todayCount = ordered.filter(log => log.date === today).length;
+  const firstSize = date ? 12 : Math.min(todayCount, 12);
+  const lastPage = Math.ceil(Math.max(0, ordered.length - firstSize) / 12);
+  const currentPage = Math.min(page, lastPage);
+  const offset = currentPage === 0 ? 0 : firstSize + (currentPage - 1) * 12;
+  const visibleRows = ordered.slice(offset, offset + (currentPage === 0 ? firstSize : 12));
   return (
     <div className="space-y-5">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
@@ -400,7 +413,7 @@ function LogsPanel() {
             <Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
             <Input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
               className="pl-10"
               placeholder="Cari driver, plat, kode…"
             />
@@ -408,9 +421,10 @@ function LogsPanel() {
           <Input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            aria-label="Filter tanggal perjalanan"
+            onChange={(e) => { setDate(e.target.value); setPage(0); }}
           />
-          <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <Select value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
             <option value="">Semua status</option>
             {["Belum Selesai", "Selesai", "Perlu Diperiksa", "Dikunci"].map(
               (s) => (
@@ -444,7 +458,7 @@ function LogsPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {rows.map((log) => {
+              {visibleRows.map((log) => {
                 const vehicle = store.vehicles.find(
                   (v) => v.id === log.vehicleId,
                 );
@@ -513,7 +527,14 @@ function LogsPanel() {
               })}
             </tbody>
           </table>
-          {!rows.length && <Empty text="Tidak ada data yang sesuai filter." />}
+          {!visibleRows.length && <Empty text={!date && currentPage === 0 ? "Tidak ada data hari ini untuk filter ini. Pilih tanggal atau klik Berikutnya jika ada riwayat." : "Tidak ada data yang sesuai filter."} />}
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 p-4 text-sm">
+          <span>{!date && currentPage === 0 ? "Hari ini · " : ""}{visibleRows.length} data ditampilkan</span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Sebelumnya</Button>
+            <Button variant="outline" size="sm" disabled={currentPage === lastPage} onClick={() => setPage(currentPage + 1)}>Berikutnya</Button>
+          </div>
         </div>
       </Card>
       {photo && <PhotoModal data={photo} onClose={() => setPhoto(null)} />}
