@@ -53,6 +53,7 @@ import { TrackingPanel } from "@/components/tracking-panel";
 import { AssetTripsPanel } from "@/components/asset-trips-panel";
 import { loadFuelTransactions, type FuelTransactionRecord } from "@/lib/fuel/admin";
 import { FuelStatusBadge } from "@/components/fuel/fuel-status";
+import { TripActivityChart } from "@/components/admin/trip-activity-chart";
 import { MasterDataTable, MasterSummary, RecordStatus, RowActions } from "@/components/admin/master-data-table";
 
 type View =
@@ -282,9 +283,6 @@ function Dashboard({ onNavigate, onCreate }: {
     const day = date.toISOString().slice(0, 10);
     return { day, count: logs.filter(log => log.date === day).length };
   });
-  const max = Math.max(1, ...days.map(d => d.count));
-  const points = days.map((d, i) => [36 + i * 688 / (period - 1), 180 - d.count / max * 146]);
-  const line = points.map(p => p.join(",")).join(" ");
   const attention = [
     { label: "Belum input KM awal", count: drivers.filter(d => !todayLogs.some(l => l.driverId === d.id)).length, view: "drivers" },
     { label: "Belum input KM akhir", count: logs.filter(l => !l.endTime && l.status === "Belum Selesai").length, view: "logs" },
@@ -302,15 +300,7 @@ function Dashboard({ onNavigate, onCreate }: {
       {cards.map(({ label, value, detail, icon: Icon, view }) => <button key={label} onClick={() => onNavigate(view)} className="group flex min-w-0 flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm hover:border-blue-300 sm:flex-row sm:gap-4 sm:p-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700"><Icon className="h-5 w-5" /></span><span className="min-w-0"><span className="block text-sm font-semibold">{label}</span><strong className="block text-[30px] leading-tight tabular-nums">{value}</strong><span className="text-xs text-slate-500">{detail}</span></span></button>)}
     </div>
     <div className="grid gap-4 xl:grid-cols-[minmax(0,2.2fr)_minmax(260px,1fr)]">
-      <Card className="min-w-0 p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-xl font-extrabold">Aktivitas Perjalanan</h3><div className="flex rounded-lg bg-slate-100 p-1">{[7, 30].map(p => <button key={p} aria-pressed={p === period} onClick={() => setPeriod(p)} className={`rounded-md px-3 py-1.5 text-sm font-semibold ${p === period ? "bg-admin-primary text-white" : "text-slate-600"}`}>{p} hari</button>)}</div></div>
-        {days.some(d => d.count) ? <><svg viewBox="0 0 760 200" className="mt-3 w-full text-admin-primary" role="img" aria-label={`Jumlah perjalanan per hari selama ${period} hari`}>
-          <defs><linearGradient id="trip-area" x2="0" y2="1"><stop stopColor="currentColor" stopOpacity=".28" /><stop offset="1" stopColor="currentColor" stopOpacity=".03" /></linearGradient></defs>
-          {[0, .25, .5, .75, 1].map(n => <g key={n}><line x1="36" x2="724" y1={180 - n * 146} y2={180 - n * 146} stroke="#e2e8f0" /><text x="29" y={184 - n * 146} textAnchor="end" fill="#475569" fontSize="12">{Number((max * n).toFixed(1))}</text></g>)}
-          <polygon points={`36,180 ${line} 724,180`} fill="url(#trip-area)" /><polyline points={line} fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-          {points.map(([x, y], i) => <circle key={days[i].day} cx={x} cy={y} r={period === 7 ? 4 : 2.5} fill="currentColor" stroke="white"><title>{formatDate(days[i].day)}: {days[i].count} perjalanan</title></circle>)}
-        </svg><div className="flex justify-between px-3 text-xs text-slate-600">{days.filter((_, i) => period === 7 ? i % 2 === 0 : i === 0 || i === 14 || i === 29).map(d => <span key={d.day}>{formatDate(d.day)}</span>)}</div></> : <div className="grid min-h-48 place-items-center text-sm text-slate-500">Belum ada perjalanan dalam periode ini.</div>}
-      </Card>
+      <TripActivityChart days={days} period={period} onPeriodChange={setPeriod} />
       <Card className="bg-admin-navy p-5 text-white">
         <h3 className="text-xl font-extrabold">Perlu Perhatian</h3>
         <div className="mt-2 divide-y divide-white/20">{attention.map((a, i) => <button key={a.label} onClick={() => onNavigate(a.view)} className="flex w-full items-center gap-3 py-3 text-left text-sm hover:text-blue-200"><span className={`h-2.5 w-2.5 rounded-full ${i === 2 ? "bg-amber-400" : "bg-admin-alert"}`} /><span className="flex-1">{a.label}</span><strong>{a.count ?? (failed ? "—" : "…")}</strong><ArrowUpRight className="h-4 w-4" /></button>)}</div>
